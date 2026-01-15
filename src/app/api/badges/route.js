@@ -4,29 +4,29 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
 const BADGES = {
-  FIRST_DOODLE: {
-    id: "first_doodle",
+  FIRST_PIXEL_ART: {
+    id: "first_pixelArt",
     name: "First Creation",
-    description: "Created your first doodle",
+    description: "Created your first pixelArt",
     icon: "🎨",
     requirement: 3,
-    type: "doodle_count",
+    type: "pixelArt_count",
   },
-  DOODLE_COLLECTOR_10: {
-    id: "doodle_collector_10",
-    name: "Doodle Collector",
-    description: "Created 10 doodles",
+  PIXEL_ART_COLLECTOR_10: {
+    id: "pixelArt_collector_10",
+    name: "Pixel Art Collector",
+    description: "Created 10 pixelArts",
     icon: "🖼️",
     requirement: 10,
-    type: "doodle_count",
+    type: "pixelArt_count",
   },
-  DOODLE_MASTER_100: {
-    id: "doodle_master_100",
-    name: "Doodle Master",
-    description: "Created 100 doodles",
+  PIXEL_ART_MASTER_100: {
+    id: "pixelArt_master_100",
+    name: "Pixel Art Master",
+    description: "Created 100 pixelArts",
     icon: "🏆",
     requirement: 100,
-    type: "doodle_count",
+    type: "pixelArt_count",
   },
   FIRST_COMMENT: {
     id: "first_comment",
@@ -55,26 +55,26 @@ const BADGES = {
   LIKER_1: {
     id: "liker_1",
     name: "First Liker",
-    description: "Liked your first doodle",
+    description: "Liked your first pixelArt",
     icon: "👍",
     requirement: 1,
-    type: "doodles_liked",
+    type: "pixelArts_liked",
   },
   LIKER_10: {
     id: "liker_10",
     name: "Thumbs Up",
-    description: "Liked 10 doodles",
+    description: "Liked 10 pixelArts",
     icon: "👍👍",
     requirement: 10,
-    type: "doodles_liked",
+    type: "pixelArts_liked",
   },
   LIKER_100: {
     id: "liker_100",
     name: "Big Fan",
-    description: "Liked 100 doodles",
+    description: "Liked 100 pixelArts",
     icon: "💖",
     requirement: 100,
-    type: "doodles_liked",
+    type: "pixelArts_liked",
   },
   LIKED_1: {
     id: "liked_1",
@@ -196,21 +196,21 @@ export async function POST(req) {
       : new Set();
 
     // ✅ Handle new actions
-    if (action === "doodle_created") {
-      stats.doodleCount += 1;
+    if (action === "pixelArt_created") {
+      stats.pixelArtCount += 1;
       // Streak logic will be the same
     } else if (action === "comment_added") {
       stats.commentCount += 1;
     } else if (action === "like_given") {
-      stats.doodlesLikedCount += 1;
+      stats.pixelArtsLikedCount += 1;
     } else if (action === "like_received" && recipientProfile) {
       // This is a special case where we update the recipient's stats
       let recipientStats = {
-        doodleCount: recipientProfile.doodleCount,
+        pixelArtCount: recipientProfile.pixelArtCount,
         commentCount: recipientProfile.commentCount,
         currentStreak: recipientProfile.currentStreak,
         lastActivity: recipientProfile.lastActivity,
-        doodlesLikedCount: recipientProfile.doodlesLikedCount,
+        pixelArtsLikedCount: recipientProfile.pixelArtsLikedCount,
         likesReceivedCount: recipientProfile.likesReceivedCount + 1, // ✅ Increment likes received
       };
 
@@ -273,8 +273,8 @@ export async function POST(req) {
       if (existingBadgeIds.has(badge.id)) {//TODO correct
         let requirementMet = false;
         if (
-          badge.type === "doodle_count" &&
-          stats.doodleCount >= badge.requirement
+          badge.type === "pixelArt_count" &&
+          stats.pixelArtCount >= badge.requirement
         ) {
           requirementMet = true;
         } else if (
@@ -288,8 +288,8 @@ export async function POST(req) {
         ) {
           requirementMet = true;
         } else if (
-          badge.type === "doodles_liked" &&
-          stats.doodlesLikedCount >= badge.requirement
+          badge.type === "pixelArts_liked" &&
+          stats.pixelArtsLikedCount >= badge.requirement
         ) {
           // ✅ New: check liked count
           requirementMet = true;
@@ -311,11 +311,11 @@ export async function POST(req) {
     const updatedProfile = await prisma.profile.update({
       where: { email: session.user.email },
       data: {
-        doodleCount: stats.doodleCount,
+        pixelArtCount: stats.pixelArtCount,
         commentCount: stats.commentCount,
         currentStreak: stats.currentStreak,
         lastActivity: stats.lastActivity,
-        doodlesLikedCount: stats.doodlesLikedCount,
+        pixelArtsLikedCount: stats.pixelArtsLikedCount,
         likesReceivedCount: stats.likesReceivedCount,
         maxStreakCount: Math.max(profile.maxStreakCount, stats.currentStreak),
       },
@@ -334,11 +334,11 @@ export async function POST(req) {
     const allBadges = Object.values(BADGES);
 
     const updatedStats = {
-      doodleCount: updatedProfile.doodleCount,
+      pixelArtCount: updatedProfile.pixelArtCount,
       commentCount: updatedProfile.commentCount,
       currentStreak: updatedProfile.currentStreak,
       lastActivity: updatedProfile.lastActivity,
-      doodlesLikedCount: updatedProfile.doodlesLikedCount,
+      pixelArtsLikedCount: updatedProfile.pixelArtsLikedCount,
       likesReceivedCount: updatedProfile.likesReceivedCount,
     };
 
