@@ -24,7 +24,7 @@ export async function POST(req) {
         },
       },
     })) || {
-      id: "default",
+      id: null,
       prompt: "Express yourself! Draw anything you like today.",
       promptDescription: "Express yourself! Draw anything you like today.",
       promptDate: startOfDay,

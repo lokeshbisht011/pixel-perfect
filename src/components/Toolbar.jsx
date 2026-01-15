@@ -28,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import ColorPicker from "./ColorPicker"; // Import ColorPicker
+import ColorPicker from "./ColorPicker2"; // Import ColorPicker
 
 export default function Toolbar({
   activeTool,
@@ -73,13 +73,13 @@ export default function Toolbar({
         >
           <PaintBucket className="mr-2 h-5 w-5" /> Fill
         </Button>
-        <Button
+        {/* <Button
           variant={activeTool === "select" ? "default" : "outline"}
           className="rounded-full"
           onClick={() => setActiveTool("select")}
         >
           <MousePointer2 className="mr-2 h-5 w-5" /> Select
-        </Button>
+        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="rounded-full">
@@ -162,14 +162,14 @@ export default function Toolbar({
         >
           <PaintBucket className="h-5 w-5" />
         </Button>
-        <Button
+        {/* <Button
           variant={activeTool === "select" ? "default" : "outline"}
           size="icon"
           className="rounded-full"
           onClick={() => setActiveTool("select")}
         >
           <MousePointer2 className="h-5 w-5" />
-        </Button>
+        </Button> */}
 
         {/* Dropdowns for sliders and other controls */}
         {/* Brush Size */}

@@ -5,11 +5,11 @@ import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import ProfileHeader from "@/components/user/ProfileHeader";
-import DoodleCard from "@/components/doodle/DoodleCard";
 import BadgeCard from "@/components/user/BadgeCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBadges } from "@/hooks/useBadges";
 import { useParams } from "next/navigation";
+import PixelArtCard from "@/components/pixelArt/PixelArtCard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,8 +26,8 @@ export default function ProfilePage() {
   const params = useParams();
   const [profile, setProfile] = useState(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
-  const [doodles, setDoodles] = useState(null);
-  const [likedDoodles, setLikedDoodles] = useState(null);
+  const [pixelArts, setPixelArts] = useState(null);
+  const [likedPixelArts, setLikedPixelArts] = useState(null);
   const [currentTab, setCurrentTab] = useState("doodles");
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -41,8 +41,8 @@ export default function ProfilePage() {
         const response = await fetch(`/api/profile/${params.username}`);
         const data = await response.json();
         setProfile(data);
-        setDoodles(data.doodles);
-        setLikedDoodles(data.likedDoodles);
+        setPixelArts(data.pixelArts);
+        setLikedPixelArts(data.likedPixelArts);
         setFollowersCount(data.followers.length);
         setFollowingCount(data.following.length);
       } catch (err) {
@@ -71,12 +71,12 @@ export default function ProfilePage() {
     checkCurrentUser();
   }, [params.username, session]);
   
-  const handleDoodleDeleted = (deletedDoodleId) => {
-    setDoodles((prevDoodles) =>
-      prevDoodles.filter((doodle) => doodle.id !== deletedDoodleId)
+  const handlePixelArtDeleted = (deletedPixelArtId) => {
+    setPixelArts((prevPixelArt) =>
+      prevPixelArt.filter((pixelArt) => pixelArt.id !== deletedPixelArtId)
     );
-    setLikedDoodles((prevLikedDoodles) =>
-      prevLikedDoodles.filter((doodle) => doodle.id !== deletedDoodleId)
+    setLikedPixelArts((prevLikedPixelArts) =>
+      prevLikedPixelArts.filter((pixelArt) => pixelArt.id !== deletedPixelArtId)
     );
   };
 
@@ -132,27 +132,27 @@ export default function ProfilePage() {
         <div className="mt-8">
           <Tabs defaultValue="doodles" onValueChange={setCurrentTab}>
             <TabsList className="mb-6">
-              <TabsTrigger value="doodles">Doodles</TabsTrigger>
+              <TabsTrigger value="doodles">Pixel Arts</TabsTrigger>
               <TabsTrigger value="badges">Badges</TabsTrigger>
               <TabsTrigger value="liked">Liked</TabsTrigger>
             </TabsList>
 
             <TabsContent value="doodles">
-              {doodles?.length > 0 ? (
-                <div className="grid grid-cols-4 gap-4">
-                  {doodles.map((doodle) => (
-                    <div key={doodle.id} className="flex-shrink-0">
-                      <DoodleCard
-                        doodle={doodle}
+              {pixelArts?.length > 0 ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {pixelArts.map((pixelArt) => (
+                    <div key={pixelArt.id} className="flex-shrink-0">
+                      <PixelArtCard
+                        pixelArt={pixelArt}
                         currentUserProfile={currentUserProfile}
-                        onDoodleDeleted={handleDoodleDeleted}
+                        onPixelArtDeleted={handlePixelArtDeleted}
                       />
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No doodles yet</p>
+                  <p className="text-muted-foreground">No pixel art yet</p>
                 </div>
               )}
             </TabsContent>
@@ -179,21 +179,21 @@ export default function ProfilePage() {
             </TabsContent>
 
             <TabsContent value="liked">
-              {likedDoodles?.length > 0 ? (
+              {likedPixelArts?.length > 0 ? (
                 <div className="grid grid-cols-4 gap-4">
-                  {likedDoodles.map((doodle) => (
-                    <div key={doodle.id} className="flex-shrink-0">
-                      <DoodleCard
-                        doodle={doodle}
+                  {likedPixelArts.map((pixelArt) => (
+                    <div key={pixelArt.id} className="flex-shrink-0">
+                      <PixelArtCard
+                        pixelArt={pixelArt}
                         currentUserProfile={currentUserProfile}
-                        onDoodleDeleted={handleDoodleDeleted}
+                        onPixelArtDeleted={handlePixelArtDeleted}
                       />
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No liked doodles yet</p>
+                  <p className="text-muted-foreground">No liked pixel art yet</p>
                 </div>
               )}
             </TabsContent>

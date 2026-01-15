@@ -7,22 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MessageCircle, Users, X } from "lucide-react";
 import BoringAvatar from "boring-avatars";
 import ProfileSetupModal from "../ProfileModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { toast } from "sonner";
 
-const ProfileHeader = ({ 
-  profile, 
-  isCurrentUser, 
-  followersCount, 
+const ProfileHeader = ({
+  profile,
+  isCurrentUser,
+  followersCount,
   followingCount,
   currentUserProfile,
   followers,
-  following
+  following,
 }) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [currentFollowersCount, setCurrentFollowersCount] = useState(followersCount);
+  const [currentFollowersCount, setCurrentFollowersCount] =
+    useState(followersCount);
   const [isLoading, setIsLoading] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
@@ -42,10 +48,12 @@ const ProfileHeader = ({
       toast.error("You must be logged in to follow users.");
       return;
     }
-    
+
     setIsLoading(true);
     const method = isFollowing ? "DELETE" : "POST";
-    const newFollowersCount = isFollowing ? currentFollowersCount - 1 : currentFollowersCount + 1;
+    const newFollowersCount = isFollowing
+      ? currentFollowersCount - 1
+      : currentFollowersCount + 1;
 
     setIsFollowing(!isFollowing);
     setCurrentFollowersCount(newFollowersCount);
@@ -53,15 +61,21 @@ const ProfileHeader = ({
     try {
       const res = await fetch(`/api/profile/${profile.username}/follow`, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!res.ok) {
         setIsFollowing(isFollowing);
         setCurrentFollowersCount(currentFollowersCount);
-        toast.error(`Failed to ${isFollowing ? 'unfollow' : 'follow'}. Please try again.`);
+        toast.error(
+          `Failed to ${isFollowing ? "unfollow" : "follow"}. Please try again.`
+        );
       } else {
-        toast.success(isFollowing ? `You have unfollowed ${profile.username}.` : `You are now following ${profile.username}!`);
+        toast.success(
+          isFollowing
+            ? `You have unfollowed ${profile.username}.`
+            : `You are now following ${profile.username}!`
+        );
       }
     } catch (error) {
       setIsFollowing(isFollowing);
@@ -94,17 +108,23 @@ const ProfileHeader = ({
     }
   };
 
-
-  const renderUserList = (list, type) => (
+  const renderUserList = (list, type) =>
     list.map((item) => {
-      const userProfile = type === 'followers' ? item.follower : item.following;
+      const userProfile = type === "followers" ? item.follower : item.following;
       if (!userProfile) return null;
-      
-      const isCurrentlyFollowingUser = type === 'following' && userProfile.username === profile.username;
-      
+
+      const isCurrentlyFollowingUser =
+        type === "following" && userProfile.username === profile.username;
+
       return (
-        <div key={userProfile.username} className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg">
-          <Link href={`/${userProfile.username}`} className="flex items-center gap-2">
+        <div
+          key={userProfile.username}
+          className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg"
+        >
+          <Link
+            href={`/${userProfile.username}`}
+            className="flex items-center gap-2"
+          >
             {userProfile?.avatarConfig ? (
               <BoringAvatar
                 size={32}
@@ -115,25 +135,31 @@ const ProfileHeader = ({
             ) : (
               <Avatar className="h-8 w-8">
                 <AvatarImage alt={userProfile.username} />
-                <AvatarFallback>{userProfile.username?.charAt(0) || "U"}</AvatarFallback>
+                <AvatarFallback>
+                  {userProfile.username?.charAt(0) || "U"}
+                </AvatarFallback>
               </Avatar>
             )}
-            <span className="font-medium hover:underline">{userProfile.username}</span>
+            <span className="font-medium hover:underline">
+              {userProfile.username}
+            </span>
           </Link>
-          {type === 'following' && isCurrentUser && currentUserProfile?.id !== userProfile.id && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleUnfollowFromList(userProfile.username, item.id)}
-            >
-              Unfollow
-            </Button>
-          )}
+          {type === "following" &&
+            isCurrentUser &&
+            currentUserProfile?.id !== userProfile.id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  handleUnfollowFromList(userProfile.username, item.id)
+                }
+              >
+                Unfollow
+              </Button>
+            )}
         </div>
       );
-    })
-  );
-
+    });
 
   return (
     <div className="bg-card p-6 rounded-lg shadow-sm">
@@ -163,12 +189,17 @@ const ProfileHeader = ({
           <div className="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              <span>Joined {new Date(profile.createdAt).toLocaleDateString()}</span>
+              <span>
+                Joined {new Date(profile.createdAt).toLocaleDateString()}
+              </span>
             </div>
 
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>{profile.doodles.length || 0} doodles</span>
+              <span>
+                {profile.pixelArts.length || 0}{" "}
+                {profile.pixelArts.length === 1 ? "pixel art" : "pixel arts"}
+              </span>
             </div>
 
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -176,12 +207,21 @@ const ProfileHeader = ({
               <span>{profile.comments.length || 0} comments</span>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start">
-            <Button variant="ghost" className="text-sm p-0 h-auto" onClick={() => setShowFollowersModal(true)}>
-              <span className="font-bold">{currentFollowersCount}</span> Followers
+            <Button
+              variant="ghost"
+              className="text-sm p-0 h-auto"
+              onClick={() => setShowFollowersModal(true)}
+            >
+              <span className="font-bold">{currentFollowersCount}</span>{" "}
+              Followers
             </Button>
-            <Button variant="ghost" className="text-sm p-0 h-auto" onClick={() => setShowFollowingModal(true)}>
+            <Button
+              variant="ghost"
+              className="text-sm p-0 h-auto"
+              onClick={() => setShowFollowingModal(true)}
+            >
               <span className="font-bold">{followingCount}</span> Following
             </Button>
           </div>
@@ -214,7 +254,7 @@ const ProfileHeader = ({
               disabled={isLoading}
               variant={isFollowing ? "secondary" : "default"}
             >
-              {isLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
+              {isLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
             </Button>
           )}
         </div>
@@ -232,11 +272,11 @@ const ProfileHeader = ({
             <DialogTitle>Followers</DialogTitle>
           </DialogHeader>
           <div className="max-h-[500px] overflow-y-auto space-y-2">
-            {renderUserList(followers, 'followers')}
+            {renderUserList(followers, "followers")}
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {/* Following Modal */}
       <Dialog open={showFollowingModal} onOpenChange={setShowFollowingModal}>
         <DialogContent className="max-w-md sm:max-w-md">
@@ -244,7 +284,7 @@ const ProfileHeader = ({
             <DialogTitle>Following</DialogTitle>
           </DialogHeader>
           <div className="max-h-[500px] overflow-y-auto space-y-2">
-            {renderUserList(following, 'following')}
+            {renderUserList(following, "following")}
           </div>
         </DialogContent>
       </Dialog>

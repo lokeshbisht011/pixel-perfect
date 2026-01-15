@@ -5,19 +5,11 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
-import DoodleCanvas from "@/components/doodle/DoodleCanvas";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useBadges } from "@/hooks/useBadges";
 import LoginModal from "@/components/LoginModal";
-import { Badge } from "@/components/ui/badge";
 import NewBadgeModal from "@/components/badges/NewBadgeModal";
+import PixelArtCanvas from "@/components/pixelArt/PixelArtCanvas";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -83,6 +75,7 @@ const CreateDoodle = () => {
 
     fetchPrompt();
   }, []);
+
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
@@ -107,23 +100,28 @@ const CreateDoodle = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSaveDoodle = async ({
+  const handleSavePixelArt = async ({
     title,
-    json,
+    data, // Matches the 'data' field in schema (the JSON string)
+    gridSize,      // New field from schema
     imageUrl,
-    zoomLevel,
-    addToTodaysDoodles,
+    addToTodaysPixelArts, // This maps to 'isPublic' in the schema
     editable,
+    dailyPromptId, // Pass this if you're editing the daily challenge
   }) => {
     if (!title) {
-      toast({ title: "Missing title", description: "Please add a title." });
+      toast({ 
+        title: "Missing title", 
+        description: "Please name your masterpiece before saving!",
+        variant: "destructive" 
+      });
       return;
     }
 
     if (!session) {
       toast({
         title: "Sign in required",
-        description: "You must be signed in to save your doodle.",
+        description: "You must be signed in to save your pixel art.",
         variant: "destructive",
       });
       setIsLoginModalOpen(true);
@@ -131,38 +129,47 @@ const CreateDoodle = () => {
     }
 
     try {
-      const today = new Date();
-      const localDate = today.toISOString().split("T")[0];
-      const response = await fetch(`/api/saveDoodle?date=${localDate}`, {
+      const response = await fetch('/api/savePixelArt', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          json,
-          imageUrl,
-          zoomLevel,
-          addToTodaysDoodles,
+          data,           // The JSON.stringify(fullGrid)
+          gridSize,               // e.g., 32, 64, or 128
+          imageUrl,               // The PNG base64 or storage URL
+          addToTodaysPixelArts, 
           editable,
+          dailyPromptId,
         }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        const result = await handleUserAction("doodle_created");
+        // Trigger gamification logic (Streaks, XP, etc.)
+        await handleUserAction("doodle_created");
+        
         toast({
-          title: "Doodle submitted",
-          description: "Your daily doodle has been submitted!",
+          title: "Art Saved! 🎨",
+          description: addToTodaysDoodles 
+            ? "Your art is now live in today's gallery." 
+            : "Your art has been saved to your profile.",
         });
-        // router.push(`/edit?id=${data.doodle.id}`);
+        
+        // Optional: Redirect to the newly created art page
+        // router.push(`/pixel/${result.doodle.id}`);
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to save doodle",
-          variant: "destructive",
-        });
+        throw new Error(result.error || "Failed to save");
       }
     } catch (error) {
-      console.error("Error saving doodle:", error);
+      console.error("Error saving pixel art:", error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Something went wrong while saving.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -179,8 +186,8 @@ const CreateDoodle = () => {
       >
         {/* Doodle Canvas Section */}
         <motion.div variants={itemVariants} className="flex-grow">
-          <DoodleCanvas
-            onSave={handleSaveDoodle}
+          <PixelArtCanvas
+            onSave={handleSavePixelArt}
             userId={session?.user?.id ?? ""}
             prompt={prompt}
           />

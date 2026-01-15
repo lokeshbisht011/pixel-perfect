@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { Toaster } from "@/components/ui/toaster";
+import Header from "./Header";
 
 const Layout = ({ children }) => {
   const { data: session } = useSession();
@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar profile={profile} />
+      <Header profile={profile} />
       <main className="flex-1">{children}</main>
       <Footer />
       <Toaster />

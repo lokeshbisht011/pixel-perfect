@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
     const profile = await prisma.profile.findUnique({
       where: { username },
       include: {
-        doodles: {
+        pixelArts: {
           include: {
             profile: true,
             likes: true,
@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
 
         likes: {
           include: {
-            doodle: {
+            pixelArt: {
               include: {
                 profile: true,
                 likes: true,
@@ -51,7 +51,7 @@ export async function GET(request, { params }) {
         },
         comments: {
           include: {
-            doodle: {
+            pixelArt: {
               include: {
                 profile: true,
                 likes: true,

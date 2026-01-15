@@ -113,11 +113,11 @@ export async function GET() {
     const profile = await prisma.profile.findUnique({
       where: { email: session.user.email },
       select: {
-        doodleCount: true,
+        pixelArtCount: true,
         commentCount: true,
         currentStreak: true,
         lastActivity: true,
-        doodlesLikedCount: true,
+        pixelArtLikedCount: true,
         likesReceivedCount: true,
         badges: {
           include: { badge: true },
@@ -130,11 +130,11 @@ export async function GET() {
     }
 
     const stats = {
-      doodleCount: profile.doodleCount,
+      pixelArtCount: profile.pixelArtCount,
       commentCount: profile.commentCount,
       currentStreak: profile.currentStreak,
       lastActivity: profile.lastActivity,
-      doodlesLikedCount: profile.doodlesLikedCount,
+      pixelArtLikedCount: profile.pixelArtLikedCount,
       likesReceivedCount: profile.likesReceivedCount,
     };
 
@@ -171,11 +171,11 @@ export async function POST(req) {
     });
 
     let stats = {
-      doodleCount: profile.doodleCount,
+      pixelArtCount: profile.pixelArtCount,
       commentCount: profile.commentCount,
       currentStreak: profile.currentStreak,
       lastActivity: profile.lastActivity,
-      doodlesLikedCount: profile.doodlesLikedCount,
+      pixelArtLikedCount: profile.pixelArtLikedCount,
       likesReceivedCount: profile.likesReceivedCount,
     };
 

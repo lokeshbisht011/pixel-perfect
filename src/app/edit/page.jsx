@@ -1,19 +1,10 @@
-// components/DoodleEditor.jsx
-
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Layout from "@/components/layout/Layout";
-import DoodleCanvas from "@/components/doodle/DoodleCanvas";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import PixelArtCanvas from "@/components/pixelArt/PixelArtCanvas";
 import { useToast } from "@/hooks/use-toast";
 import LoginModal from "@/components/LoginModal";
 import { Suspense } from "react";
@@ -21,12 +12,12 @@ import { Loader2 } from "lucide-react";
 
 import quotes from "@/lib/quotes.json";
 
-const DoodleEditor = () => {
+const PixelArtEditor = () => {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [doodle, setDoodle] = useState(null);
-  const [doodleId, setDoodleId] = useState(null);
+  const [pixelArt, setPixelArt] = useState(null);
+  const [pixelArtId, setPixelArtId] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [quote, setQuote] = useState(null); // New state for the random quote
 
@@ -36,24 +27,32 @@ const DoodleEditor = () => {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     setQuote(quotes[randomIndex]);
 
-    const doodleIdParam = searchParams.get("id");
-    if (doodleIdParam) {
-      setDoodleId(doodleIdParam);
-      const fetchDoodle = async () => {
+    const pixelArtIdParam = searchParams.get("id");
+    if (pixelArtIdParam) {
+      setPixelArtId(pixelArtIdParam);
+      const fetchPixelArt = async () => {
         try {
-          const response = await fetch(`/api/doodles/${doodleIdParam}`);
-          if (!response.ok) throw new Error("Failed to fetch doodle");
+          const response = await fetch(`/api/pixelArts/${pixelArtIdParam}`);
+          if (!response.ok) throw new Error("Failed to fetch pixelArt");
           const data = await response.json();
-          setDoodle(data);
+          setPixelArt(data);
         } catch (err) {
           console.error(err);
         }
       };
-      fetchDoodle();
+      fetchPixelArt();
     }
   }, [searchParams]);
 
-  const handleUpdateDoodle = async ({ title, json, imageUrl, zoomLevel, addToTodaysDoodles, editable }) => {
+  const handleUpdatePixelArt = async ({
+    title,
+    data, // Matches the 'data' field in schema (the JSON string)
+    gridSize, // New field from schema
+    imageUrl,
+    addToTodaysPixelArts, // This maps to 'isPublic' in the schema
+    editable,
+    dailyPromptId,
+  }) => {
     if (!title) {
       toast({ title: "Missing title", description: "Please add a title." });
       return;
@@ -62,7 +61,7 @@ const DoodleEditor = () => {
     if (!session) {
       toast({
         title: "Sign in required",
-        description: "You must be signed in to edit a doodle.",
+        description: "You must be signed in to edit a pixelArt.",
         variant: "destructive",
       });
       setIsLoginModalOpen(true);
@@ -70,30 +69,43 @@ const DoodleEditor = () => {
     }
 
     try {
-      const today = new Date();
-      const localDate = today.toISOString().split("T")[0];
-      const response = await fetch(`/api/updateDoodle/${doodleId}?date=${localDate}`, {
+      const response = await fetch(`/api/updatePixelArt/${pixelArtId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, json, imageUrl, zoomLevel, addToTodaysDoodles, editable }),
+        body: JSON.stringify({
+          title,
+          data, // The JSON.stringify(fullGrid)
+          gridSize, // e.g., 32, 64, or 128
+          imageUrl, // The PNG base64 or storage URL
+          addToTodaysPixelArts,
+          editable,
+          dailyPromptId,
+        }),
       });
 
       if (response.ok) {
-        toast({ title: "Doodle updated", description: "Your doodle has been updated!" });
+        toast({
+          title: "PixelArt updated",
+          description: "Your pixelArt has been updated!",
+        });
       } else {
-        toast({ title: "Error", description: "Failed to update doodle", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: "Failed to update pixelArt",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error("Error updating doodle:", error);
+      console.error("Error updating pixelArt:", error);
     }
   };
 
   return (
     <>
-      {doodle ? (
-        <DoodleCanvas
-          onSave={handleUpdateDoodle}
-          doodle={doodle}
+      {pixelArt ? (
+        <PixelArtCanvas
+          onSave={handleUpdatePixelArt}
+          pixelArt={pixelArt}
           userId={session?.user?.id ?? ""}
         />
       ) : (
@@ -103,10 +115,13 @@ const DoodleEditor = () => {
             {quote ? (
               <>
                 <span className="font-semibold italic">"{quote.quote}"</span>
-                <span className="block mt-2 text-sm font-medium"> - {quote.author}</span>
+                <span className="block mt-2 text-sm font-medium">
+                  {" "}
+                  - {quote.author}
+                </span>
               </>
             ) : (
-              "Loading doodle..."
+              "Loading pixelArt..."
             )}
           </p>
         </div>
@@ -115,24 +130,22 @@ const DoodleEditor = () => {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
-        reason="edit-doodle"
+        reason="edit-pixelArt"
       />
     </>
   );
 };
 
-const EditDoodle = () => {
-  const { data: session } = useSession();
-
+const EditPixelArt = () => {
   return (
-    <Layout user={session?.user ?? null}>
+    <Layout>
       <div className="container py-8">
         <Suspense fallback={<div>Loading...</div>}>
-          <DoodleEditor />
+          <PixelArtEditor />
         </Suspense>
       </div>
     </Layout>
   );
 };
 
-export default EditDoodle;
+export default EditPixelArt;

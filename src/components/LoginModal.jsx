@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import {
   Dialog,
@@ -14,28 +14,29 @@ import { Button } from "@/components/ui/button";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaTwitter } from "react-icons/fa";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react"; // Reusing Loader2 for consistency
 
 const LoginModal = ({ isOpen, onClose, initialMode = "signin", reason }) => {
   const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     setMode(initialMode);
-  }, [initialMode])
+  }, [initialMode]);
 
   const titleMap = {
-    signin: "Welcome Back 👋",
-    signup: "Join A Doodle A Day ✨",
+    signin: "WELCOME BACK",
+    signup: "JOIN PIXEL A DAY",
   };
 
   const descriptionMap = {
-    signin: "Sign in to continue your doodling journey",
-    signup: "Create an account to start your streaks and earn badges",
+    signin: "Sign in to continue your pixel art journey",
+    signup: "Create an account to start your creative streak",
   };
 
   const reasonMessage =
     reason === "save-doodle"
-      ? "You need to sign in to save your doodle."
+      ? "You need to sign in to save your pixel art."
       : null;
 
   const handleLogin = async (provider) => {
@@ -47,7 +48,7 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signin", reason }) => {
       });
 
       if (result?.error) {
-        toast.error(`Failed to sign in with ${provider}`);
+        toast.error(`Failed to sign in with ${provider} ❌`);
       } else {
         toast.success("Signed in successfully 🎉");
         onClose();
@@ -61,91 +62,114 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signin", reason }) => {
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md rounded-2xl p-6 bg-white">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      {/* Apply pixel-card styling via wrapper div */}
+      <DialogContent className="max-w-md bg-card border-none p-0">
+        <div className="pixel-card w-full p-4 sm:p-6 font-mono">
           <DialogHeader className="space-y-2 text-center">
-            <DialogTitle className="text-2xl font-bold">
+            <DialogTitle className="text-2xl font-bold font-mono neon-glow text-primary">
               {titleMap[mode]}
             </DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-muted-foreground font-mono">
               {reasonMessage || descriptionMap[mode]}
             </DialogDescription>
           </DialogHeader>
 
           {/* Social logins */}
-          <div className="flex flex-col gap-3 mt-4">
+          <div className="flex flex-col gap-3 mt-6">
             <Button
               onClick={() => handleLogin("google")}
               disabled={loading}
-              className="flex items-center justify-center gap-2 border rounded-lg py-2 bg-white text-gray-700 hover:bg-gray-50 shadow"
+              variant="outline" // Use outline to keep the Google icon visible
+              className="flex items-center justify-center gap-2 text-foreground hover:bg-accent hover:text-accent-foreground font-mono"
             >
               <FcGoogle className="h-5 w-5" />
-              {mode === "signup"
-                ? "Sign up with Google"
-                : "Sign in with Google"}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : mode === "signup" ? (
+                "Sign up with Google"
+              ) : (
+                "Sign in with Google"
+              )}
             </Button>
 
+            {/* Using theme variants for Facebook/Twitter */}
             <Button
               onClick={() => handleLogin("facebook")}
               disabled={loading}
-              className="flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 shadow"
+              variant="pixel" // Themed button style
+              className="flex items-center justify-center gap-2 font-mono"
             >
               <FaFacebookF className="h-5 w-5" />
-              {mode === "signup"
-                ? "Sign up with Facebook"
-                : "Sign in with Facebook"}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : mode === "signup" ? (
+                "Sign up with Facebook"
+              ) : (
+                "Sign in with Facebook"
+              )}
             </Button>
 
             <Button
               onClick={() => handleLogin("twitter")}
               disabled={loading}
-              className="flex items-center justify-center gap-2 bg-sky-500 text-white rounded-lg py-2 hover:bg-sky-600 shadow"
+              variant="neon" // Flashy themed button style
+              className="flex items-center justify-center gap-2 font-mono"
             >
               <FaTwitter className="h-5 w-5" />
-              {mode === "signup"
-                ? "Sign up with Twitter"
-                : "Sign in with Twitter"}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : mode === "signup" ? (
+                "Sign up with X (Twitter)"
+              ) : (
+                "Sign in with X (Twitter)"
+              )}
             </Button>
           </div>
 
           <DialogFooter className="mt-6 flex flex-col justify-center gap-2">
-            <p className="text-sm text-gray-500 text-center">
+            <p className="text-sm text-muted-foreground text-center font-mono">
               By signing in, you agree to our{" "}
-              <a href="/terms" className="underline hover:text-purple-600">
+              <a
+                href="/terms"
+                className="text-pixel-neon-cyan hover:underline"
+              >
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="/privacy" className="underline hover:text-purple-600">
+              <a
+                href="/privacy"
+                className="text-pixel-neon-cyan hover:underline"
+              >
                 Privacy Policy
               </a>
               .
             </p>
             {mode === "signin" ? (
-              <p className="text-sm text-gray-600 text-center">
+              <p className="text-sm text-foreground text-center font-mono">
                 Don’t have an account?{" "}
                 <button
                   onClick={() => setMode("signup")}
-                  className="text-purple-600 hover:underline"
+                  className="text-pixel-neon-pink hover:underline"
                 >
                   Sign up
                 </button>
               </p>
             ) : (
-              <p className="text-sm text-gray-600 text-center">
+              <p className="text-sm text-foreground text-center font-mono">
                 Already have an account?{" "}
                 <button
                   onClick={() => setMode("signin")}
-                  className="text-purple-600 hover:underline"
+                  className="text-pixel-neon-pink hover:underline"
                 >
                   Sign in
                 </button>
               </p>
             )}
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

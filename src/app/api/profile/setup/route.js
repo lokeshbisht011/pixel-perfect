@@ -46,15 +46,15 @@ export async function POST(req) {
         },
         socialLinks: {},
 
-        doodleCount: 0,
+        pixelArtCount: 0,
         commentCount: 0,
         currentStreak: 0,
         likesReceivedCount: 0,
-        doodlesLikedCount: 0,
+        pixelArtLikedCount: 0,
         maxStreakCount: 0,
         lastActivity: null,
 
-        doodles: { create: [] },
+        pixelArts: { create: [] },
         likes: { create: [] },
         followers: { create: [] },
         following: { create: [] },
