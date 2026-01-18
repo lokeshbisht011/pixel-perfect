@@ -25,7 +25,7 @@ const HorizontalScrollRow = ({ title, date, limit = 12, profile={profile} }) => 
         setLoading(true);
         const formattedDate = date.toISOString().split("T")[0];
         const res = await fetch(
-          `/api/getPixelArts?date=${formattedDate}&limit=${limit}`
+          `/api/pixelArts?date=${formattedDate}&limit=${limit}`
         );
         const data = await res.json();
         setPixelArts(Array.isArray(data) ? data : []);
@@ -46,28 +46,28 @@ const HorizontalScrollRow = ({ title, date, limit = 12, profile={profile} }) => 
 
   return (
     <div className="mb-12">
-      <div className="flex items-center justify-between mb-6 px-2">
+      <div className="flex items-center justify-between px-2">
         <h3 className="text-2xl font-mono font-bold flex items-center gap-2">
           <Calendar className="w-6 h-6 text-pixel-neon-cyan" />
-          <span className="uppercase tracking-tighter">{title}</span>
+          <span className="uppercase tracking-tighter text-md md:text-3xl">{title}</span>
         </h3>
         <Link href={`/gallery?date=${date.toISOString().split("T")[0]}`}>
           <Button
             variant="ghost"
             className="font-mono text-pixel-neon-pink hover:bg-pixel-neon-pink/10"
           >
-            VIEW ALL <ArrowRight className="ml-2 w-4 h-4" />
+            <span className="text-xs">VIEW ALL</span><ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </Link>
       </div>
 
       <div className="relative group">
         {loading ? (
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-border">
+          <div className="pt-4 md:pt-6 h-64 flex items-center justify-center border-2 border-dashed border-border">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : pixelArts.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2">
+          <div className="pt-4 md:pt-6 grid grid-flow-col auto-cols-[minmax(250px,1fr)] md:auto-cols-[minmax(350px,1fr)] gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2">
             {pixelArts.map((pixelArt) => (
               <PixelArtCard
                 pixelArt={pixelArt}

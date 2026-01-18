@@ -47,10 +47,10 @@ export async function POST(req) {
         socialLinks: {},
 
         pixelArtCount: 0,
-        commentCount: 0,
+        commentsCount: 0,
         currentStreak: 0,
         likesReceivedCount: 0,
-        pixelArtLikedCount: 0,
+        pixelArtsLikedCount: 0,
         maxStreakCount: 0,
         lastActivity: null,
 

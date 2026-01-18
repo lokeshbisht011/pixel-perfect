@@ -1,126 +1,100 @@
-'use client'
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+
+const calculateBadgeProgress = (badge, stats) => {
+  if (!stats) return 0;
+
+  const valueMap = {
+    pixel_art_count: stats.pixelArtCount,
+    comment_count: stats.commentsCount,
+    streak: stats.currentStreak,
+    pixel_arts_liked: stats.pixelArtsLikedCount,
+    likes_received: stats.likesReceivedCount,
+  };
+
+  const current = valueMap[badge.type] ?? 0;
+  return Math.min(Math.floor((current / badge.requirement) * 100), 100);
+};
 
 export const useBadges = () => {
   const [badges, setBadges] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [showNewBadgeModal, setShowNewBadgeModal] = useState(false);
-  const [earnedBadges, setEarnedBadges] = useState([]);
+  const [badgeQueue, setBadgeQueue] = useState([]);
+  const [activeBadge, setActiveBadge] = useState(null);
 
-  const processBadges = useCallback((allBadges, earnedBadgeIds, stats) => {
-    const allBadgesWithProgress = allBadges.map((badge) => {
-      const isEarned = earnedBadgeIds.has(badge.id);
-      return {
+  useEffect(() => {
+    if (!activeBadge && badgeQueue.length > 0) {
+      setActiveBadge(badgeQueue[0]);
+    }
+  }, [badgeQueue, activeBadge]);
+
+  const processBadges = useCallback((allBadges, earnedBadges, stats) => {
+    const earnedIds = new Set(earnedBadges.map((b) => b.id));
+
+    setBadges(
+      allBadges.map((badge) => ({
         ...badge,
-        progress: isEarned ? 100 : calculateBadgeProgress(badge, stats),
-        isEarned,
-      };
-    });
-    setBadges(allBadgesWithProgress);
+        isEarned: earnedIds.has(badge.id),
+        progress: earnedIds.has(badge.id)
+          ? 100
+          : calculateBadgeProgress(badge, stats),
+      }))
+    );
   }, []);
 
   const fetchBadges = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/badges`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch user badges and stats");
-      }
+      const res = await fetch("/api/badges");
+      if (!res.ok) throw new Error();
+
       const data = await res.json();
       setStats(data.stats);
-
-      // 🔹 Pass all badges and earned badges to the processor
-      const earnedBadgeIds = new Set(data.earnedBadges.map((b) => b.id));
-      processBadges(data.allBadges, earnedBadgeIds, data.stats);
-    } catch (error) {
-      console.error("Error fetching badges:", error);
-      toast.error("Failed to load user badges.");
+      processBadges(data.allBadges, data.earnedBadges, data.stats);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load badges");
     } finally {
       setLoading(false);
     }
   }, [processBadges]);
 
+  const syncBadges = useCallback(async () => {
+    try {
+      const res = await fetch("/api/badges/sync", { method: "POST" });
+      if (!res.ok) return;
+
+      const { newBadges } = await res.json();
+      if (!newBadges || newBadges.length === 0) return;
+
+      setBadgeQueue((prev) => [...prev, ...newBadges]);
+      fetchBadges();
+    } catch (err) {
+      console.error("Badge sync failed", err);
+    }
+  }, [fetchBadges]);
+
   useEffect(() => {
     fetchBadges();
   }, [fetchBadges]);
 
-  const handleUserAction = useCallback(
-    async (action, recipientUserId = null) => {
-      try {
-        const res = await fetch("/api/badges", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, recipientUserId }),
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to update user stats");
-        }
-
-        const result = await res.json();
-
-        if (action === 'like_received') {
-          return result;
-        }
-
-        setStats(result.stats);
-
-        // 🔹 Re-process badges with the updated data from the server
-        const earnedBadgeIds = new Set(result.earnedBadges.map((b) => b.id));
-        processBadges(result.allBadges, earnedBadgeIds, result.stats);
-
-        console.log(result.newBadges)
-        if (result.newBadges?.length > 0) {
-          setEarnedBadges(result.newBadges);
-          setShowNewBadgeModal(true);
-        }
-        return result;
-      } catch (error) {
-        console.error("Error handling user action:", error);
-        toast.error("An error occurred while performing this action.");
-      }
-    },
-    [processBadges]
-  );
+  const closeBadgeModal = () => {
+    setBadgeQueue(q => q.slice(1));
+    setActiveBadge(null);
+  };
 
   return {
     badges,
     stats,
     loading,
-    handleUserAction,
-    showNewBadgeModal,
-    setShowNewBadgeModal,
-    earnedBadges,
+    fetchBadges,
+    syncBadges,
+    activeBadge,
+    showNewBadgeModal: badgeQueue.length > 0,
+    closeBadgeModal,
   };
-};
-
-const calculateBadgeProgress = (badge, stats) => {
-  if (!badge || !stats) return 0;
-
-  let currentValue = 0;
-  let nextRequirement = badge.requirement;
-
-  if (badge.type === 'doodle_count') {
-    currentValue = stats.doodleCount;
-  } else if (badge.type === 'streak') {
-    currentValue = stats.currentStreak;
-  } else if (badge.type === 'comment_count') {
-    currentValue = stats.commentCount;
-  } else if (badge.type === 'doodles_liked') {
-    currentValue = stats.doodlesLikedCount;
-  } else if (badge.type === 'likes_received') {
-    currentValue = stats.likesReceivedCount;
-  }
-
-  if (nextRequirement <= 0) return 100;
-
-  const progress = Math.min(
-    Math.floor((currentValue / nextRequirement) * 100),
-    100
-  );
-  return progress;
 };

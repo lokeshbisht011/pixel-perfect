@@ -60,7 +60,7 @@ export const calculateBadgeProgress = (badge, stats) => {
   } else if (badge.type === 'streak') {
     currentValue = stats.currentStreak;
   } else if (badge.type === 'comment_count') {
-    currentValue = stats.commentCount;
+    currentValue = stats.commentsCount;
   }
   
   if (nextRequirement <= 0) return 100;

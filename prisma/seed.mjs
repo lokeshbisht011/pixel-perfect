@@ -2,29 +2,29 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 const BADGES = {
-  FIRST_DOODLE: {
-    id: "first_doodle",
+  FIRST_PIXEL_ART: {
+    id: "first_pixel_art",
     name: "First Creation",
-    description: "Created your first doodle",
+    description: "Created your first Pixel Art",
     icon: "🎨",
     requirement: 1,
-    type: "doodle_count",
+    type: "pixel_art_count",
   },
-  DOODLE_COLLECTOR_10: {
-    id: "doodle_collector_10",
-    name: "Doodle Collector",
-    description: "Created 10 doodles",
+  PIXEL_ART_COLLECTOR_10: {
+    id: "pixel_art_collector_10",
+    name: "Pixel Art Collector",
+    description: "Created 10 Pixel Arts",
     icon: "🖼️",
     requirement: 10,
-    type: "doodle_count",
+    type: "pixel_art_count",
   },
-  DOODLE_MASTER_100: {
-    id: "doodle_master_100",
-    name: "Doodle Master",
-    description: "Created 100 doodles",
+  PIXEL_ART_MASTER_100: {
+    id: "pixel_art_master_100",
+    name: "Pixel Master",
+    description: "Created 100 Pixel Arts",
     icon: "🏆",
     requirement: 100,
-    type: "doodle_count",
+    type: "pixel_art_count",
   },
   FIRST_COMMENT: {
     id: "first_comment",
@@ -53,26 +53,26 @@ const BADGES = {
   LIKER_1: {
     id: "liker_1",
     name: "First Liker",
-    description: "Liked your first doodle",
+    description: "Liked your first Pixel Art",
     icon: "👍",
     requirement: 1,
-    type: "doodles_liked",
+    type: "pixel_arts_liked",
   },
   LIKER_10: {
     id: "liker_10",
     name: "Thumbs Up",
-    description: "Liked 10 doodles",
+    description: "Liked 10 Pixel Arts",
     icon: "👍👍",
     requirement: 10,
-    type: "doodles_liked",
+    type: "pixel_arts_liked",
   },
   LIKER_100: {
     id: "liker_100",
     name: "Big Fan",
-    description: "Liked 100 doodles",
+    description: "Liked 100 Pixel Arts",
     icon: "💖",
     requirement: 100,
-    type: "doodles_liked",
+    type: "pixel_arts_liked",
   },
   LIKED_1: {
     id: "liked_1",

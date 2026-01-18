@@ -1,204 +1,54 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { motion } from "framer-motion";
-import React, { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
-import ProfileHeader from "@/components/user/ProfileHeader";
-import BadgeCard from "@/components/user/BadgeCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useBadges } from "@/hooks/useBadges";
 import { useParams } from "next/navigation";
-import PixelArtCard from "@/components/pixelArt/PixelArtCard";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+import ProfileHeaderSection from "@/components/profile/ProfileHeaderSection";
+import ProfilePixelArtsSection from "@/components/profile/ProfilePixelArtsSection";
+import ProfileBadgesSection from "@/components/profile/ProfileBadgesSection";
+import ProfileLikedSection from "@/components/profile/ProfileLikedSection";
+import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
-  const params = useParams();
-  const [profile, setProfile] = useState(null);
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
-  const [pixelArts, setPixelArts] = useState(null);
-  const [likedPixelArts, setLikedPixelArts] = useState(null);
-  const [currentTab, setCurrentTab] = useState("doodles");
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const { username } = useParams();
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
 
-  const { badges, loading } = useBadges();
-
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch(`/api/profile/${params.username}`);
-        const data = await response.json();
-        setProfile(data);
-        setPixelArts(data.pixelArts);
-        setLikedPixelArts(data.likedPixelArts);
-        setFollowersCount(data.followers.length);
-        setFollowingCount(data.following.length);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      }
+    const load = async () => {
+      const fetchProfile = await fetch("/api/profile/user")
+      const profileData = fetchProfile.ok ? await fetchProfile.json() : null;
+
+      setCurrentUserProfile(profileData);
     };
 
-    const checkCurrentUser = async () => {
-      if (session?.user?.email) {
-        try {
-          const response = await fetch("/api/profile/user");
-          const data = await response.json();
-          setIsCurrentUser(data.username === params.username);
-          setCurrentUserProfile(data);
-        } catch (error) {
-          console.error("Error checking own profile:", error);
-          setIsCurrentUser(false);
-          setCurrentUserProfile(null);
-        }
-      } else {
-        setIsCurrentUser(false);
-      }
-    };
-
-    fetchProfile();
-    checkCurrentUser();
-  }, [params.username, session]);
-  
-  const handlePixelArtDeleted = (deletedPixelArtId) => {
-    setPixelArts((prevPixelArt) =>
-      prevPixelArt.filter((pixelArt) => pixelArt.id !== deletedPixelArtId)
-    );
-    setLikedPixelArts((prevLikedPixelArts) =>
-      prevLikedPixelArts.filter((pixelArt) => pixelArt.id !== deletedPixelArtId)
-    );
-  };
-
-  const ProfileLoader = () => (
-    <div className="animate-pulse space-y-6">
-      <div className="flex flex-col md:flex-row gap-6 items-center">
-        <div className="w-20 h-20 bg-gray-200 rounded-full" />
-        <div className="flex-1 space-y-3">
-          <div className="h-6 bg-gray-200 rounded w-1/3" />
-          <div className="h-4 bg-gray-200 rounded w-2/3" />
-          <div className="flex gap-3 mt-3">
-            <div className="h-4 bg-gray-200 rounded w-20" />
-            <div className="h-4 bg-gray-200 rounded w-20" />
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="w-full h-48 bg-gray-200 rounded-lg" />
-        ))}
-      </div>
-    </div>
-  );
-
-  if (!profile) {
-    return (
-      <Layout>
-        <div className="container py-8">
-          <ProfileLoader />
-        </div>
-      </Layout>
-    );
-  }
-
-  // 🔹 Sort badges to show earned first, then render a single list
-  const sortedBadges = badges
-    ? [...badges].sort((a, b) => (b.isEarned - a.isEarned))
-    : [];
+    load();
+  }, [username]);
 
   return (
     <Layout>
-      <div className="container py-8">
-        <ProfileHeader 
-          profile={profile} 
-          isCurrentUser={isCurrentUser} 
-          followersCount={followersCount}
-          followingCount={followingCount}
-          currentUserProfile={currentUserProfile}
-          followers={profile.followers}
-          following={profile.following}
-        />
+      <div className="container py-6">
+        <ProfileHeaderSection username={username} />
 
-        <div className="mt-8">
-          <Tabs defaultValue="doodles" onValueChange={setCurrentTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="doodles">Pixel Arts</TabsTrigger>
-              <TabsTrigger value="badges">Badges</TabsTrigger>
-              <TabsTrigger value="liked">Liked</TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="pixelArts" className="mt-8">
+          <TabsList>
+            <TabsTrigger value="pixelArts">Pixel Arts</TabsTrigger>
+            <TabsTrigger value="badges">Badges</TabsTrigger>
+            <TabsTrigger value="liked">Liked</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="doodles">
-              {pixelArts?.length > 0 ? (
-                <div className="grid grid-cols-3 gap-4">
-                  {pixelArts.map((pixelArt) => (
-                    <div key={pixelArt.id} className="flex-shrink-0">
-                      <PixelArtCard
-                        pixelArt={pixelArt}
-                        currentUserProfile={currentUserProfile}
-                        onPixelArtDeleted={handlePixelArtDeleted}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No pixel art yet</p>
-                </div>
-              )}
-            </TabsContent>
+          <TabsContent value="pixelArts">
+            <ProfilePixelArtsSection username={username} currentUserProfile={currentUserProfile} />
+          </TabsContent>
 
-            <TabsContent value="badges">
-              {sortedBadges.length > 0 ? (
-                <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-                >
-                  {sortedBadges.map((badge) => (
-                    <BadgeCard key={badge.id} badge={badge} />
-                  ))}
-                </motion.div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    No badges have been defined yet.
-                  </p>
-                </div>
-              )}
-            </TabsContent>
+          <TabsContent value="badges">
+            <ProfileBadgesSection />
+          </TabsContent>
 
-            <TabsContent value="liked">
-              {likedPixelArts?.length > 0 ? (
-                <div className="grid grid-cols-4 gap-4">
-                  {likedPixelArts.map((pixelArt) => (
-                    <div key={pixelArt.id} className="flex-shrink-0">
-                      <PixelArtCard
-                        pixelArt={pixelArt}
-                        currentUserProfile={currentUserProfile}
-                        onPixelArtDeleted={handlePixelArtDeleted}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No liked pixel art yet</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+          <TabsContent value="liked">
+            <ProfileLikedSection username={username} />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

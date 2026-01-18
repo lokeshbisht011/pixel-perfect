@@ -197,14 +197,14 @@ const ProfileHeader = ({
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>
-                {profile.pixelArts.length || 0}{" "}
-                {profile.pixelArts.length === 1 ? "pixel art" : "pixel arts"}
+                {profile.pixelArtsCount || 0}{" "}
+                {profile.pixelArtsCount === 1 ? "pixel art" : "pixel arts"}
               </span>
             </div>
 
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <MessageCircle className="h-4 w-4" />
-              <span>{profile.comments.length || 0} comments</span>
+              <span>{profile.commentsCount || 0} comments</span>
             </div>
           </div>
 

@@ -124,13 +124,25 @@
     @apply border border-muted;
   }
   .pixel-card {
-    @apply bg-card border-2 border-border p-6 shadow-lg;
-    box-shadow: 8px 8px 0px hsl(var(--border)), 16px 16px 0px hsl(var(--muted));
+    @apply bg-card border-2 border-border p-2 md:p-6 shadow-lg;
+    box-shadow: 4px 4px 0px hsl(var(--border)), 8px 8px 0px hsl(var(--muted));
+  }
+
+  @media (min-width: 768px) {
+    .pixel-card {
+      box-shadow: 8px 8px 0px hsl(var(--border)), 16px 16px 0px hsl(var(--muted));
+    }
   }
 
   .pixel-card-single {
     @apply bg-card border-2 border-border p-6 shadow-lg;
-    box-shadow: 8px 8px 0px hsl(var(--border));
+    box-shadow: 4px 4px 0px hsl(var(--border));
+  }
+
+  @media (min-width: 768px) {
+    .pixel-card-single {
+      box-shadow: 8px 8px 0px hsl(var(--border));
+    }
   }
 
   .canvas-card {

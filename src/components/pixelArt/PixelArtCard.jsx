@@ -2,49 +2,49 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageSquare, Share2, Edit, Trash2 } from "lucide-react";
+import { Heart, MessageSquare, Share2, Edit, Trash2, Copy } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import Avatar from "boring-avatars";
 import { motion } from "framer-motion";
 import { useToast } from "../ui/use-toast";
-import DeleteDoodleDialog from "./DeleteDoodleDialog";
 import ShareModal from "../ShareModal";
 import PixelArtModal from "./PixelArtModal";
+import { useRouter } from "next/navigation";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   const { toast } = useToast();
   const [likes, setLikes] = useState(pixelArt.likesCount || 0);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(pixelArt.likedByMe);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const [isCurrentUser, setIsCurrentUser] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    if (currentUserProfile) {
-      setLiked(
-        pixelArt.likes?.some((like) => like.profileId === currentUserProfile.id)
-      );
-      setIsCurrentUser(currentUserProfile?.id === pixelArt.profile.id);
-    }
+    setIsCurrentUser(currentUserProfile?.id === pixelArt.profile.id);
   }, [currentUserProfile, pixelArt]);
 
   const handleLike = async (e) => {
     e.stopPropagation();
+
     const prevLiked = liked;
-    const prevCount = likes;
     setLiked(!prevLiked);
-    setLikes(prevLiked ? (p) => p - 1 : (p) => p + 1);
+    setLikes((prev) => (prevLiked ? prev - 1 : prev + 1));
 
     try {
       const res = await fetch(`/api/pixelArts/${pixelArt.id}/like`, {
         method: "POST",
       });
       if (!res.ok) throw new Error();
-    } catch (err) {
+    } catch {
       setLiked(prevLiked);
-      setLikes(prevCount);
+      setLikes((prev) => (prevLiked ? prev + 1 : prev - 1));
       toast({
         title: "Error",
         description: "Failed to update like.",
@@ -58,6 +58,67 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
     text: `"${pixelArt.title || "Untitled"}" by ${pixelArt.profile.username}`,
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/pixelArt?id=${pixelArt.id}`,
   };
+
+  const handleCopyPixelArt = async (e) => {
+    e.stopPropagation();
+    if (isCopying) return;
+
+    setIsCopying(true);
+
+    try {
+      const res = await fetch("/api/copyPixelArt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pixelArtId: pixelArt.id }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to copy pixel art");
+      }
+
+      const result = await res.json();
+
+      toast({
+        title: "Copied!",
+        description: "You can now edit your copied pixel art",
+      });
+
+      router.push(`/edit?id=${result.pixelArt.id}`);
+    } catch (error) {
+      console.error("Copy pixel art error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to copy pixel art",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
+  const handleDeletePixelArt = async () => {
+    setDeleting(true);
+
+    try {
+      const res = await fetch(`/api/pixelArts/${pixelArt.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Pixel Art deleted successfully!");
+        setShowDeleteConfirm(false);
+        onClose();
+      } else {
+        toast.error("Failed to delete Pixel Art. Please try again.");
+      }
+    } catch (err) {
+      toast.error("Network error. Failed to delete Pixel Art.");
+      console.error("Error deleting Pixel Art:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   return (
     <motion.div
@@ -116,19 +177,32 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
           </div>
           <div className="flex items-center gap-1 text-pixel-neon-cyan">
             <MessageSquare className="w-4 h-4" />
-            <span>{pixelArt.comments?.length || 0}</span>
+            <span>{pixelArt.commentsCount}</span>
           </div>
 
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4"
-              onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </div>
+          {/* Share */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-4 w-4"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsShareModalOpen(true);
+            }}
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+
+          {/* Copy */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-4 w-4"
+            disabled={isCopying}
+            onClick={handleCopyPixelArt}
+          >
+            <Copy className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`} />
+          </Button>
         </div>
 
         {/* Action Buttons (Edit/Delete) - Only shown if it's the current user */}
@@ -139,6 +213,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 hover:text-pixel-neon-cyan"
+                onClick={(e) => e.stopPropagation()}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -147,7 +222,10 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
               variant="ghost"
               size="icon"
               className="h-7 w-7 hover:text-red-500"
-              onClick={() => {setIsDeleteDialogOpen(true)}}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteConfirm(true);
+              }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -162,11 +240,14 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
         onClose={() => setIsModalOpen(false)}
         currentUserProfile={currentUserProfile}
       />
-      <DeleteDoodleDialog
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        doodleId={pixelArt.id}
-        onDoodleDeleted={onPixelArtDeleted}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete pixel art?"
+        description="This will permanently remove your pixel art. This action cannot be undone."
+        confirmText="Delete"
+        loading={deleting}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeletePixelArt}
       />
       <ShareModal
         isOpen={isShareModalOpen}

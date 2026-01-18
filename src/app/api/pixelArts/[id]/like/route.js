@@ -9,80 +9,115 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const doodleId = params.id;
+  const pixelArtId = params.id;
 
   try {
-    // Find the current user's profile and the doodle being liked, including its creator's profile
-    const [profile, doodle] = await Promise.all([
-      prisma.profile.findUnique({
-        where: { email: session.user.email },
-      }),
-      prisma.doodle.findUnique({
-        where: { id: doodleId },
-        include: { profile: true }, // Include the doodle creator's profile
-      }),
-    ]);
+    const profile = await prisma.profile.findUnique({
+      where: { email: session.user.email },
+    });
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
-    if (!doodle || !doodle.profile) {
-      return NextResponse.json({ error: "Doodle or creator profile not found" }, { status: 404 });
-    }
 
-    // Check if the like already exists
-    const existingLike = await prisma.like.findFirst({
-      where: {
-        doodleId: doodleId,
-        profileId: profile.id,
+    const pixelArt = await prisma.pixelArt.findUnique({
+      where: { id: pixelArtId },
+      select: {
+        id: true,
+        profileId: true,
+        likesCount: true,
+        deletedAt: true,
       },
     });
 
-    let liked;
-
-    if (existingLike) {
-      // User is unliking the doodle
-      await prisma.$transaction([
-        // 1. Delete the like record
-        prisma.like.delete({
-          where: { id: existingLike.id },
-        }),
-        // 2. Decrement the likes count on the doodle
-        prisma.doodle.update({
-          where: { id: doodleId },
-          data: { likesCount: { decrement: 1 } },
-        }),
-        // 3. Decrement the total likes on the creator's profile
-        prisma.profile.update({
-          where: { id: doodle.profileId },
-          data: { likesReceivedCount: { decrement: 1 } },
-        }),
-      ]);
-      liked = false;
-    } else {
-      // User is liking the doodle
-      await prisma.$transaction([
-        // 1. Create a new like record
-        prisma.like.create({
-          data: { doodleId, profileId: profile.id },
-        }),
-        // 2. Increment the likes count on the doodle
-        prisma.doodle.update({
-          where: { id: doodleId },
-          data: { likesCount: { increment: 1 } },
-        }),
-        // 3. Increment the total likes on the creator's profile
-        prisma.profile.update({
-          where: { id: doodle.profileId },
-          data: { likesReceivedCount: { increment: 1 } },
-        }),
-      ]);
-      liked = true;
+    if (!pixelArt || pixelArt.deletedAt) {
+      return NextResponse.json(
+        { error: "Pixel Art not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ liked });
+    // Use composite unique constraint
+    const existingLike = await prisma.like.findUnique({
+      where: {
+        profileId_pixelArtId: {
+          profileId: profile.id,
+          pixelArtId,
+        },
+      },
+    });
+
+    let liked = false;
+    let likesCount = pixelArt.likesCount;
+
+    await prisma.$transaction(async (tx) => {
+      if (existingLike) {
+        // UNLIKE
+        await tx.like.delete({
+          where: {
+            profileId_pixelArtId: {
+              profileId: profile.id,
+              pixelArtId,
+            },
+          },
+        });
+
+        if (likesCount > 0) {
+          await tx.pixelArt.update({
+            where: { id: pixelArtId },
+            data: {
+              likesCount: { decrement: 1 },
+            },
+          });
+
+          await tx.profile.update({
+            where: { id: pixelArt.profileId },
+            data: {
+              likesReceivedCount: { decrement: 1 },
+            },
+          });
+
+          likesCount -= 1;
+        }
+
+        liked = false;
+      } else {
+        // LIKE
+        await tx.like.create({
+          data: {
+            profileId: profile.id,
+            pixelArtId,
+          },
+        });
+
+        await tx.pixelArt.update({
+          where: { id: pixelArtId },
+          data: {
+            likesCount: { increment: 1 },
+          },
+        });
+
+        await tx.profile.update({
+          where: { id: pixelArt.profileId },
+          data: {
+            likesReceivedCount: { increment: 1 },
+          },
+        });
+
+        likesCount += 1;
+        liked = true;
+      }
+    });
+
+    return NextResponse.json({
+      liked,
+      likesCount,
+    });
   } catch (error) {
     console.error("Error updating like status:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

@@ -11,37 +11,71 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useBadges } from "@/hooks/useBadges";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
-  if (!pixelArt) {
-    return null;
-  }
+  const [fullPixelArt, setFullPixelArt] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(pixelArt.likesCount || 0);
-  const [comments, setComments] = useState(pixelArt.comments || []);
+  const [likes, setLikes] = useState(0);
+  const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
 
-  const { handleUserAction } = useBadges();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const { syncBadges } = useBadges();
 
   useEffect(() => {
-    if (currentUserProfile) {
+    if (!isOpen || !pixelArt?.id) return;
+
+    const fetchFullPixelArt = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/pixelArts/${pixelArt.id}`);
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
+
+        setFullPixelArt(data);
+        setLikes(data.likesCount);
+        setComments(data.comments);
+      } catch (err) {
+        toast.error("Failed to load pixel art");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFullPixelArt();
+  }, [isOpen, pixelArt?.id]);
+
+  useEffect(() => {
+    if (currentUserProfile && fullPixelArt) {
       setLiked(
-        pixelArt.likes.some((like) => like.profileId === currentUserProfile.id)
+        fullPixelArt.likes.some(
+          (like) => like.profileId === currentUserProfile.id
+        )
       );
     }
-  }, [currentUserProfile, pixelArt]);
+  }, [currentUserProfile, fullPixelArt]);
+
+  if (!isOpen) return null;
+  if (loading || !fullPixelArt) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl flex items-center justify-center">
+          Loading…
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const handleLike = async () => {
-    const previousLikedState = liked;
-    const previousLikesCount = likes;
-
-    setLiked(!previousLikedState);
-    if (previousLikedState) {
-      setLikes((p) => p - 1);
-    } else {
-      setLikes((p) => p + 1);
-    }
+    const prev = liked;
+    setLiked(!prev);
+    setLikes((p) => (prev ? p - 1 : p + 1));
 
     try {
       const res = await fetch(`/api/doodles/${pixelArt.id}/like`, {
@@ -49,31 +83,33 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
       });
 
       if (!res.ok) {
-        setLiked(previousLikedState);
-        setLikes(previousLikesCount);
-        toast.error("Failed to like doodle. Please try again.");
+        setLiked(prev);
+        setLikes((p) => (prev ? p + 1 : p - 1));
+        toast.error("Network error. Please try again.");
+      } else {
+        syncBadges();
       }
     } catch (err) {
-      setLiked(previousLikedState);
-      setLikes(previousLikesCount);
-      toast.error("Network error. Please try again.")
-      console.error("Error liking doodle:", err);
+      setLiked(prev);
+      setLikes((p) => (prev ? p + 1 : p - 1));
+      toast.error("Network error. Please try again.");
+      console.error("Error liking Pixel Art:", err);
     }
   };
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
     try {
-      const res = await fetch(`/api/doodles/${pixelArt.id}/comments`, {
+      const res = await fetch(`/api/pixelArts/${pixelArt.id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: commentText }),
       });
       if (res.ok) {
         const newComment = await res.json();
-        handleUserAction("comment_added");
         setComments((prev) => [newComment, ...prev]);
         setCommentText("");
+        syncBadges();
       }
     } catch (err) {
       console.error("Error adding comment:", err);
@@ -83,7 +119,7 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
   const handleDeleteComment = async (commentId) => {
     try {
       const res = await fetch(
-        `/api/doodles/${pixelArt.id}/comments/${commentId}`,
+        `/api/pixelArts/${pixelArt.id}/comments/${commentId}`,
         {
           method: "DELETE",
         }
@@ -96,28 +132,28 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
     }
   };
 
-  const handleDeleteDoodle = async () => {
-    if (!window.confirm("Are you sure you want to delete this doodle? This action cannot be undone.")) {
-      return;
-    }
+  const handleDeletePixelArt = async () => {
+    setDeleting(true);
 
     try {
-      const res = await fetch(`/api/deleteDoodle/${pixelArt.id}`, {
+      const res = await fetch(`/api/pixelArts/${pixelArt.id}`, {
         method: "DELETE",
       });
+
       if (res.ok) {
-        toast.success("Doodle deleted successfully!");
+        toast.success("Pixel Art deleted successfully!");
+        setShowDeleteConfirm(false);
         onClose();
       } else {
-        toast.error("Failed to delete doodle. Please try again.");
+        toast.error("Failed to delete Pixel Art. Please try again.");
       }
     } catch (err) {
-      toast.error("Network error. Failed to delete doodle.");
-      console.error("Error deleting doodle:", err);
+      toast.error("Network error. Failed to delete Pixel Art.");
+      console.error("Error deleting Pixel Art:", err);
+    } finally {
+      setDeleting(false);
     }
   };
-
-  if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -242,14 +278,21 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
                   <Button variant="ghost" size="icon">
                     <Share2 className="h-6 w-6" />
                   </Button>
-                  {currentUserProfile?.id === pixelArt.profileId && (
+                  {currentUserProfile?.id === pixelArt.profile.id && (
                     <>
                       <Link href={`/edit?id=${pixelArt.id}`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-6 w-6" />
                         </Button>
                       </Link>
-                      <Button variant="ghost" size="icon" onClick={handleDeleteDoodle}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteConfirm(true);
+                        }}
+                      >
                         <Trash2 className="h-6 w-6" />
                       </Button>
                     </>
@@ -278,6 +321,15 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
           </div>
         )}
       </DialogContent>
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete pixel art?"
+        description="This will permanently remove your pixel art. This action cannot be undone."
+        confirmText="Delete"
+        loading={deleting}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeletePixelArt}
+      />
     </Dialog>
   );
 };

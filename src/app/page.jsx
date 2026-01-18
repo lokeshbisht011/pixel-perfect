@@ -5,12 +5,25 @@ import HowItWorks from "@/components/HowItWorks";
 import FloatingPixelIcons from "@/components/FloatingPixelIcons";
 import Layout from "@/components/layout/Layout";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PixelArtGallery from "@/components/PixelArtGallery";
+import NewBadgeModal from "@/components/badges/NewBadgeModal";
+import { useBadges } from "@/hooks/useBadges";
 
 const Index = () => {
   const { data: session } = useSession();
   const [profile, setProfile] = useState(null);
+
+  const { activeBadge, showNewBadgeModal, closeBadgeModal, syncBadges } = useBadges();
+  const { status } = useSession();
+  const hasSyncedRef = useRef(false);
+
+  useEffect(() => {
+    if (status === "authenticated" && !hasSyncedRef.current) {
+      hasSyncedRef.current = true;
+      syncBadges();
+    }
+  }, [status]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -31,6 +44,11 @@ const Index = () => {
 
   return (
     <Layout>
+      <NewBadgeModal
+        isOpen={showNewBadgeModal}
+        badge={activeBadge}
+        onClose={closeBadgeModal}
+      />
       <div className="min-h-screen bg-background relative overflow-hidden">
         <FloatingPixelIcons />
 

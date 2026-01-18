@@ -8,7 +8,6 @@ import Layout from "@/components/layout/Layout";
 import { useToast } from "@/hooks/use-toast";
 import { useBadges } from "@/hooks/useBadges";
 import LoginModal from "@/components/LoginModal";
-import NewBadgeModal from "@/components/badges/NewBadgeModal";
 import PixelArtCanvas from "@/components/pixelArt/PixelArtCanvas";
 
 const containerVariants = {
@@ -42,10 +41,7 @@ const CreateDoodle = () => {
   });
 
   const {
-    handleUserAction,
-    showNewBadgeModal,
-    setShowNewBadgeModal,
-    earnedBadges,
+    syncBadges
   } = useBadges();
 
   useEffect(() => {
@@ -146,15 +142,14 @@ const CreateDoodle = () => {
       const result = await response.json();
 
       if (response.ok) {
-        // Trigger gamification logic (Streaks, XP, etc.)
-        await handleUserAction("doodle_created");
-        
         toast({
-          title: "Art Saved! 🎨",
-          description: addToTodaysDoodles 
+          title: "Pixel Art Saved! 🎨",
+          description: addToTodaysPixelArts 
             ? "Your art is now live in today's gallery." 
             : "Your art has been saved to your profile.",
         });
+
+        await syncBadges()
         
         // Optional: Redirect to the newly created art page
         // router.push(`/pixel/${result.doodle.id}`);
@@ -164,12 +159,11 @@ const CreateDoodle = () => {
     } catch (error) {
       console.error("Error saving pixel art:", error);
       toast({
-        title: "Save Failed",
-        description: error.message || "Something went wrong while saving.",
+        title: "Error saving Pixel Art",
+        description: "Something went wrong while saving.",
         variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
     }
   };
 
@@ -179,7 +173,7 @@ const CreateDoodle = () => {
   return (
     <Layout>
       <motion.div
-        className="container py-8"
+        className="px-2 md:container py-2 md:py-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -197,12 +191,7 @@ const CreateDoodle = () => {
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
           reason="save-doodle"
-        />
-
-        <NewBadgeModal
-          isOpen={showNewBadgeModal}
-          onClose={() => setShowNewBadgeModal(false)}
-          badges={earnedBadges}
+          callbackUrl="/create"
         />
       </motion.div>
     </Layout>

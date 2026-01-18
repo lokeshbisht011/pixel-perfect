@@ -39,17 +39,12 @@ function ProfileSetupWatcher() {
 }
 
 export default function Providers({ children }) {
-  const { showNewBadgeModal, setShowNewBadgeModal, earnedBadges } = useBadges();
+
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         {children}
         <ProfileSetupWatcher />
-        <NewBadgeModal
-          isOpen={showNewBadgeModal}
-          onClose={() => setShowNewBadgeModal(false)}
-          badges={earnedBadges}
-        />
       </SessionProvider>
     </QueryClientProvider>
   );

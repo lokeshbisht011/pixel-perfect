@@ -16,7 +16,7 @@ import { FaFacebookF, FaTwitter } from "react-icons/fa";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react"; // Reusing Loader2 for consistency
 
-const LoginModal = ({ isOpen, onClose, initialMode = "signin", reason }) => {
+const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackUrl = "/" }) => {
   const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +44,7 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signin", reason }) => {
       setLoading(true);
       const result = await signIn(provider, {
         redirect: false,
-        callbackUrl: "/",
+        callbackUrl
       });
 
       if (result?.error) {

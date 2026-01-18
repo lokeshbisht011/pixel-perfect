@@ -39,8 +39,8 @@ model Profile {
   // Stats for Gamification
   pixelArtCount      Int      @default(0)
   likesReceivedCount Int      @default(0)
-  pixelArtLikedCount Int      @default(0)
-  commentCount       Int      @default(0)
+  pixelArtsLikedCount Int      @default(0)
+  commentsCount       Int      @default(0)
   currentStreak      Int      @default(0)
   maxStreakCount     Int      @default(0)
   lastActivity       DateTime?
@@ -54,6 +54,9 @@ model Profile {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  deletedAt DateTime?
+  deletedBy String?
 }
 
 model PixelArt {
@@ -70,6 +73,7 @@ model PixelArt {
   addToTodaysPixelArts      Boolean   @default(true) // Matches your "Add to Today's Pixel Arts" checkbox
   
   likesCount    Int       @default(0)
+  commentsCount  Int     @default(0)
 
   // Relationships
   profileId     String    @db.ObjectId
@@ -83,6 +87,9 @@ model PixelArt {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  deletedAt DateTime?
+  deletedBy String?
 }
 
 model DailyPrompt {
@@ -95,6 +102,9 @@ model DailyPrompt {
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  deletedAt DateTime?
+  deletedBy String?
 }
 
 // --- Relationship & System Models ---
@@ -157,6 +167,9 @@ model Comment {
   pixelArt    PixelArt   @relation(fields: [pixelArtId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  deletedAt DateTime?
+  deletedBy String?
 }
 
 model Streak {

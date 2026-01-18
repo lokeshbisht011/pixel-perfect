@@ -22,6 +22,21 @@ import {
 import ColorPicker from "../ColorPicker";
 import { toast } from "../ui/use-toast";
 
+const STORAGE_KEY = "pixel-art-draft";
+
+const saveDraft = (data) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
+const loadDraft = () => {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : null;
+};
+
+const clearDraft = () => {
+  localStorage.removeItem(STORAGE_KEY);
+};
+
 const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
   const [fullGrid, setFullGrid] = useState([]);
   const [displayGrid, setDisplayGrid] = useState([]);
@@ -40,6 +55,36 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
   const activeColorRef = useRef(activeColor);
   const activeToolRef = useRef(activeTool);
   const undoInProgressRef = useRef(false);
+
+  useEffect(() => {
+    const draft = loadDraft();
+    if (!draft) {
+      const emptyGrid = createEmptyGrid(gridSize);
+      setFullGrid(emptyGrid);
+      saveCanvasState({ grid: emptyGrid, gridSize: gridSize }, true);
+    } else {
+      setFullGrid(draft.fullGrid ?? []);
+      setDisplayGrid(draft.displayGrid ?? []);
+      setGridSize(draft.gridSize ?? 32);
+      setSliderGridSize(draft.gridSize ?? 32);
+      setActiveColor(draft.activeColor ?? "#ff6b6b");
+      setActiveTool(draft.activeTool ?? "brush");
+      saveCanvasState({ grid: draft.fullGrid, gridSize: draft.gridSize }, true);
+    }
+  }, []);
+
+  // useEffect(() => {
+  //   const draft = {
+  //     fullGrid,
+  //     displayGrid,
+  //     gridSize,
+  //     activeColor,
+  //     activeTool,
+  //     updatedAt: Date.now(),
+  //   };
+
+  //   saveDraft(draft);
+  // }, [fullGrid, displayGrid, gridSize, activeColor, activeTool]);
 
   const saveCanvasState = useCallback(
     (state, overwrite = false) => {
@@ -120,15 +165,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
       setTitle(prompt.prompt);
       setAddToTodaysPixelArts(true);
       setAllowEdit(true);
-      const emptyGrid = createEmptyGrid(gridSize);
-      setFullGrid(emptyGrid);
-      saveCanvasState({ grid: emptyGrid, gridSize: gridSize }, true);
-    } else {
-      const emptyGrid = createEmptyGrid(gridSize);
-      setFullGrid(emptyGrid);
-      saveCanvasState({ grid: emptyGrid, gridSize: gridSize }, true);
     }
-  }, [pixelArt, prompt, createEmptyGrid]);
+  }, [pixelArt, prompt]);
 
   useEffect(() => {
     const newDisplayGrid = fullGrid
@@ -259,24 +297,34 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
     link.href = dataURL;
     link.download = `pixel-art-${Date.now()}.png`;
     link.click();
-    toast({ 
-      title: "Pixel Art Downloaded", 
+    toast({
+      title: "Pixel Art Downloaded",
       description: "Your pixel art has been downloaded.",
-      variant: "default" 
+      variant: "default",
     });
   };
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast({ 
-        title: "Missing title", 
+      toast({
+        title: "Missing title",
         description: "Please name your masterpiece before saving!",
-        variant: "destructive" 
+        variant: "destructive",
       });
       return;
     }
 
     setIsSaving(true);
+
+    const draft = {
+      fullGrid,
+      displayGrid,
+      gridSize,
+      activeColor,
+      activeTool,
+      updatedAt: Date.now(),
+    };
+    saveDraft(draft);
 
     const croppedGrid = fullGrid
       .slice(0, gridSize)
@@ -316,10 +364,10 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
       });
     } catch (err) {
       console.error("Failed to save:", err);
-      toast({ 
-        title: "Failed to save. Please try again.", 
+      toast({
+        title: "Failed to save. Please try again.",
         description: "",
-        variant: "destructive" 
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -340,10 +388,10 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-2 md:gap-6">
           {/* Main Canvas */}
           <div className="lg:col-span-2">
-            <div className="canvas-card bg-card p-4 max-w-[600px]">
+            <div className="canvas-card bg-card p-2 md:p-4 max-w-[600px]">
               <div className="border-4 border-border bg-white rounded-none overflow-hidden">
                 <div
                   className="grid rounded-lg shadow-md overflow-hidden bg-white"
