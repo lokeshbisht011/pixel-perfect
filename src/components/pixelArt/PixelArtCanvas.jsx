@@ -2,25 +2,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import {
-  Download,
-  Loader2,
-  Save,
-  RotateCcw,
-  Brush,
-  Eraser,
-  Palette,
-  History,
-  X,
-  Square,
-} from "lucide-react";
-import ColorPicker from "../ColorPicker";
+import { Brush, Eraser, PaintBucket } from "lucide-react";
 import { toast } from "../ui/use-toast";
+import Toolbar from "./Toolbar";
+import Settings from "./Settings";
 
 const STORAGE_KEY = "pixel-art-draft";
 
@@ -37,7 +24,7 @@ const clearDraft = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
-const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
+const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [fullGrid, setFullGrid] = useState([]);
   const [displayGrid, setDisplayGrid] = useState([]);
   const [gridSize, setGridSize] = useState(32);
@@ -47,7 +34,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [title, setTitle] = useState(prompt?.prompt || "asdf");
+  const [title, setTitle] = useState(prompt?.prompt || "Untitled");
   const [addToTodaysPixelArts, setAddToTodaysPixelArts] = useState(true);
   const [allowEdit, setAllowEdit] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -55,6 +42,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
   const activeColorRef = useRef(activeColor);
   const activeToolRef = useRef(activeTool);
   const undoInProgressRef = useRef(false);
+  const gridRef = useRef(null);
 
   useEffect(() => {
     const draft = loadDraft();
@@ -175,10 +163,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
     setDisplayGrid(newDisplayGrid);
   }, [fullGrid, gridSize]);
 
-  const handleToolClick = (tool) => {
-    setActiveTool(tool);
-  };
-
   const handlePixelClick = (row, col) => {
     setFullGrid((prevFullGrid) => {
       const newFullGrid = JSON.parse(JSON.stringify(prevFullGrid));
@@ -219,6 +203,50 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
       saveCanvasState({ grid: newFullGrid, gridSize: fullGrid.length });
       return newFullGrid;
     });
+  };
+
+  const handlePointerDown = (e, row, col) => {
+    e.preventDefault();
+    setIsDrawing(true);
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    if (activeTool === "fill") {
+      handleFill(row, col);
+    } else {
+      handlePixelClick(row, col);
+    }
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDrawing || activeTool === "fill") return;
+
+    const grid = gridRef.current;
+    console.log(grid)
+    if (!grid) return;
+
+    const rect = grid.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const col = Math.floor((x / rect.width) * gridSize);
+    const row = Math.floor((y / rect.height) * gridSize);
+
+    if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+      handlePixelClick(row, col);
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    if (!isDrawing) return;
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+
+    setIsDrawing(false);
+    saveCanvasState({ grid: fullGrid, gridSize: fullGrid.length });
   };
 
   const handleMouseDown = (e, row, col) => {
@@ -377,7 +405,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
   const tools = [
     { id: "brush", icon: Brush, label: "Brush" },
     { id: "eraser", icon: Eraser, label: "Eraser" },
-    { id: "fill", icon: Square, label: "Fill" },
+    { id: "fill", icon: PaintBucket, label: "Fill" },
   ];
 
   return (
@@ -388,35 +416,50 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="grid lg:grid-cols-3 gap-2 md:gap-6">
+        <div className="grid lg:grid-cols-3 gap-2 md:gap-6 items-stretch">
+          {/* MOBILE TITLE */}
+          <div className="lg:hidden sticky top-0 z-10 bg-background border-b border-border px-3 py-2">
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Untitled Pixel Art"
+              className="font-mono text-sm h-9"
+            />
+          </div>
           {/* Main Canvas */}
           <div className="lg:col-span-2">
-            <div className="canvas-card bg-card p-2 md:p-4 max-w-[600px]">
-              <div className="border-4 border-border bg-white rounded-none overflow-hidden">
+            <div className="canvas-card bg-card p-2 md:p-4 max-w-[600px] h-full">
+              <div className="border-4 border-border bg-white rounded-none overflow-hidden h-full">
                 <div
-                  className="grid rounded-lg shadow-md overflow-hidden bg-white"
+                  ref={gridRef}
+                  className="grid rounded-lg shadow-md overflow-hidden bg-white h-full touch-none"
                   style={{
                     gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
                     gridTemplateRows: `repeat(${gridSize}, 1fr)`,
-                    height: "auto",
-                    aspectRatio: "1/1",
+                    aspectRatio: "1 / 1",
                   }}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
+                  // onMouseUp={handleMouseUp}
+                  // onMouseLeave={handleMouseUp}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
                 >
                   {displayGrid.map((row, rowIndex) =>
                     row.map((color, colIndex) => (
                       <div
                         key={`${rowIndex}-${colIndex}`}
-                        className="pixel"
+                        className="pixel touch-none select-none"
                         style={{ backgroundColor: color }}
-                        onMouseDown={(e) =>
-                          handleMouseDown(e, rowIndex, colIndex)
+                        // onMouseDown={(e) =>
+                        //   handleMouseDown(e, rowIndex, colIndex)
+                        // }
+                        // onMouseEnter={(e) =>
+                        //   handleMouseMove(e, rowIndex, colIndex)
+                        // }
+                        onPointerDown={(e) =>
+                          handlePointerDown(e, rowIndex, colIndex)
                         }
-                        onMouseEnter={(e) =>
-                          handleMouseMove(e, rowIndex, colIndex)
-                        }
-                      ></div>
+                      />
                     ))
                   )}
                 </div>
@@ -424,147 +467,35 @@ const PixelArtCanvas = ({ onSave, pixelArt, userId, prompt }) => {
             </div>
           </div>
 
-          {/* Tool Panel */}
-          <div className="space-y-6">
-            <div className="pixel-card-single bg-card p-4">
-              <h3 className="font-bold mb-4 text-card-foreground">Tools</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {tools.map((tool) => (
-                  <Button
-                    key={tool.id}
-                    variant={activeTool === tool.id ? "neon" : "pixel"}
-                    size="sm"
-                    onClick={() => handleToolClick(tool.id)}
-                    className="justify-start gap-2"
-                  >
-                    <tool.icon className="w-4 h-4" />
-                    {tool.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Undo/Redo/Clear Actions */}
-            <div className="pixel-card-single bg-card p-4">
-              <h3 className="font-bold mb-4 text-card-foreground">History</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="pixel"
-                  className="w-full"
-                  onClick={handleUndo}
-                  disabled={historyIndex <= 0}
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Undo
-                </Button>
-                <Button
-                  variant="pixel"
-                  className="w-full"
-                  onClick={handleRedo}
-                  disabled={historyIndex >= history.length - 1}
-                >
-                  <History className="w-4 h-4" />
-                  Redo
-                </Button>
-              </div>
-              <Button
-                variant="neon"
-                className="w-full mt-2"
-                onClick={handleClear}
-              >
-                <X className="w-4 h-4" />
-                Clear All
-              </Button>
-            </div>
-
-            {/* Grid Size */}
-            <div className="pixel-card-single bg-card p-4">
-              <h3 className="font-bold mb-4 text-card-foreground">
-                Grid Size: {sliderGridSize}x{sliderGridSize}
-              </h3>
-              <Slider
-                value={[sliderGridSize]}
-                onValueChange={(val) => setSliderGridSize(val[0])}
-                max={128}
-                min={8}
-                step={1}
-                className="w-full"
+          {/* Right Panel (Scrollable) */}
+          <div className="flex flex-col h-full max-h-[600px] overflow-hidden">
+            <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+              <Toolbar
+                tools={tools}
+                activeTool={activeTool}
+                onToolChange={setActiveTool}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                onClear={handleClear}
+                historyIndex={historyIndex}
+                historyLength={history.length}
+                sliderGridSize={sliderGridSize}
+                setSliderGridSize={setSliderGridSize}
+                activeColor={activeColor}
+                setActiveColor={setActiveColor}
               />
-            </div>
 
-            {/* Colors */}
-            <ColorPicker
-              activeColor={activeColor}
-              setActiveColor={setActiveColor}
-            />
+              <Separator />
 
-            <Separator />
-
-            {/* Settings Section */}
-            <div className="pixel-card-single bg-card p-4">
-              <h3 className="font-bold mb-4 text-card-foreground">Settings</h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="allowEdit"
-                    checked={allowEdit}
-                    onCheckedChange={(checked) => setAllowEdit(!!checked)}
-                    className="border-2 border-primary data-[state=checked]:bg-primary"
-                  />
-                  <label
-                    htmlFor="allowEdit"
-                    className="text-sm font-mono cursor-pointer select-none text-card-foreground"
-                  >
-                    Allow others to edit
-                  </label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="todaysDoodles"
-                    checked={addToTodaysPixelArts}
-                    onCheckedChange={(checked) =>
-                      setAddToTodaysPixelArts(!!checked)
-                    }
-                    className="border-2 border-primary data-[state=checked]:bg-primary"
-                  />
-                  <label
-                    htmlFor="todaysDoodles"
-                    className="text-sm font-mono cursor-pointer select-none text-card-foreground"
-                  >
-                    Add to Today's Pixel Arts
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-3">
-              <Button
-                variant="neon"
-                className="w-full"
-                onClick={handleSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-5 w-5" />
-                    Save Pixel Art
-                  </>
-                )}
-              </Button>
-
-              <Button
-                variant="pixel"
-                className="w-full"
-                onClick={handleDownload}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
+              <Settings
+                allowEdit={allowEdit}
+                setAllowEdit={setAllowEdit}
+                addToTodaysPixelArts={addToTodaysPixelArts}
+                setAddToTodaysPixelArts={setAddToTodaysPixelArts}
+                onSave={handleSave}
+                onDownload={handleDownload}
+                isSaving={isSaving}
+              />
             </div>
           </div>
         </div>
