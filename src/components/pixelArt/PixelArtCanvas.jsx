@@ -24,6 +24,8 @@ const clearDraft = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
+const MAX_GRID_SIZE = 128;
+
 const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [fullGrid, setFullGrid] = useState([]);
   const [displayGrid, setDisplayGrid] = useState([]);
@@ -47,14 +49,15 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   useEffect(() => {
     const draft = loadDraft();
     if (!draft) {
-      const emptyGrid = createEmptyGrid(gridSize);
-      setFullGrid(emptyGrid);
-      saveCanvasState({ grid: emptyGrid, gridSize: gridSize }, true);
+      const emptyFullGrid = createEmptyGrid(MAX_GRID_SIZE);
+      setFullGrid(emptyFullGrid);
+      setGridSize(32);
+      setSliderGridSize(32);
+      saveCanvasState({ grid: emptyFullGrid, gridSize: 32 }, true);
     } else {
-      setFullGrid(draft.fullGrid ?? []);
-      setDisplayGrid(draft.displayGrid ?? []);
-      setGridSize(draft.gridSize ?? 32);
-      setSliderGridSize(draft.gridSize ?? 32);
+      setFullGrid(draft.fullGrid);
+      setGridSize(draft.gridSize);
+      setSliderGridSize(draft.gridSize);
       setActiveColor(draft.activeColor ?? "#ff6b6b");
       setActiveTool(draft.activeTool ?? "brush");
       saveCanvasState({ grid: draft.fullGrid, gridSize: draft.gridSize }, true);
@@ -101,27 +104,13 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   }, []);
 
   const handleGridResize = useCallback((newSize) => {
-    if (newSize > fullGrid.length) {
-      setFullGrid((prevFullGrid) => {
-        const newFullGrid = Array.from({ length: newSize }, (_, rowIndex) =>
-          Array.from({ length: newSize }, (_, colIndex) => {
-            if (prevFullGrid[rowIndex] && prevFullGrid[rowIndex][colIndex]) {
-              return prevFullGrid[rowIndex][colIndex];
-            }
-            return "#ffffff";
-          })
-        );
-        saveCanvasState({ grid: newFullGrid, gridSize: newSize }, true);
-        return newFullGrid;
-      });
-    }
     setGridSize(newSize);
   }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       handleGridResize(sliderGridSize);
-    }, 200);
+    }, 0);
     return () => clearTimeout(handler);
   }, [sliderGridSize]);
 
@@ -164,44 +153,55 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   }, [fullGrid, gridSize]);
 
   const handlePixelClick = (row, col) => {
-    setFullGrid((prevFullGrid) => {
-      const newFullGrid = JSON.parse(JSON.stringify(prevFullGrid));
-      if (newFullGrid[row] && newFullGrid[row][col]) {
-        newFullGrid[row][col] =
-          activeTool === "eraser" ? "#ffffff" : activeColor;
-      }
-      return newFullGrid;
+    setFullGrid((prev) => {
+      const next = prev.map((r) => [...r]);
+
+      const newColor =
+        activeToolRef.current === "eraser" ? "#ffffff" : activeColorRef.current;
+
+      if (next[row][col] === newColor) return prev;
+
+      next[row][col] = newColor;
+      return next;
     });
   };
 
   const handleFill = (startRow, startCol) => {
-    setFullGrid((prevFullGrid) => {
-      const newFullGrid = JSON.parse(JSON.stringify(prevFullGrid));
-      const targetColor = newFullGrid[startRow][startCol];
-      const fillColor = activeTool === "eraser" ? "#ffffff" : activeColor;
-      if (targetColor === fillColor) return newFullGrid;
+    setFullGrid((prev) => {
+      // Clone efficiently
+      const next = prev.map((row) => [...row]);
+
+      const targetColor = next[startRow][startCol];
+      const fillColor =
+        activeToolRef.current === "eraser" ? "#ffffff" : activeColorRef.current;
+
+      if (targetColor === fillColor) return prev;
 
       const stack = [[startRow, startCol]];
 
-      while (stack.length > 0) {
+      while (stack.length) {
         const [row, col] = stack.pop();
-        if (
-          row < 0 ||
-          row >= fullGrid.length ||
-          col < 0 ||
-          col >= fullGrid.length ||
-          newFullGrid[row][col] !== targetColor
-        ) {
+
+        if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) {
           continue;
         }
-        newFullGrid[row][col] = fillColor;
+
+        if (next[row][col] !== targetColor) continue;
+
+        next[row][col] = fillColor;
+
         stack.push([row + 1, col]);
         stack.push([row - 1, col]);
         stack.push([row, col + 1]);
         stack.push([row, col - 1]);
       }
-      saveCanvasState({ grid: newFullGrid, gridSize: fullGrid.length });
-      return newFullGrid;
+
+      saveCanvasState({
+        grid: next,
+        gridSize,
+      });
+
+      return next;
     });
   };
 
@@ -222,7 +222,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     if (!isDrawing || activeTool === "fill") return;
 
     const grid = gridRef.current;
-    console.log(grid)
     if (!grid) return;
 
     const rect = grid.getBoundingClientRect();
@@ -327,7 +326,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     link.click();
     toast({
       title: "Pixel Art Downloaded",
-      description: "Your pixel art has been downloaded.",
+      description: "Your Pixel Art has been downloaded.",
       variant: "default",
     });
   };
