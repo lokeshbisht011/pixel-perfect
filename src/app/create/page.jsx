@@ -49,12 +49,11 @@ const CreateDoodle = () => {
       try {
         const today = new Date();
         const localDate = today.toISOString().split("T")[0];
-        const res = await fetch(`/api/daily-prompts/today`, {
+        const res = await fetch(`/api/dailyPrompts/today`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ date: localDate }),
         });
         if (!res.ok) {
           setLoading(false);
@@ -101,8 +100,8 @@ const CreateDoodle = () => {
     data, // Matches the 'data' field in schema (the JSON string)
     gridSize,      // New field from schema
     imageUrl,
-    addToTodaysPixelArts, // This maps to 'isPublic' in the schema
-    editable,
+    canCopy,
+    visibilityStatus,
     dailyPromptId, // Pass this if you're editing the daily challenge
   }) => {
     if (!title) {
@@ -115,11 +114,6 @@ const CreateDoodle = () => {
     }
 
     if (!session) {
-      toast({
-        title: "Sign in required",
-        description: "You must be signed in to save your pixel art.",
-        variant: "destructive",
-      });
       setIsLoginModalOpen(true);
       return;
     }
@@ -133,8 +127,8 @@ const CreateDoodle = () => {
           data,           // The JSON.stringify(fullGrid)
           gridSize,               // e.g., 32, 64, or 128
           imageUrl,               // The PNG base64 or storage URL
-          addToTodaysPixelArts, 
-          editable,
+          canCopy,
+          visibilityStatus,
           dailyPromptId,
         }),
       });
@@ -144,7 +138,7 @@ const CreateDoodle = () => {
       if (response.ok) {
         toast({
           title: "Pixel Art Saved! 🎨",
-          description: addToTodaysPixelArts 
+          description: dailyPromptId 
             ? "Your art is now live in today's gallery." 
             : "Your art has been saved to your profile.",
         });
@@ -178,7 +172,7 @@ const CreateDoodle = () => {
         initial="hidden"
         animate="visible"
       >
-        {/* Doodle Canvas Section */}
+        {/* Pixel Art Canvas Section */}
         <motion.div variants={itemVariants} className="flex-grow">
           <PixelArtCanvas
             onSave={handleSavePixelArt}

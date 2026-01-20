@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/authOptions";
+import { VISIBILITY_STATUS } from "@/lib/utils";
 
 export async function POST(request) {
   const session = await getServerSession(authOptions);
@@ -37,7 +38,7 @@ export async function POST(request) {
     const original = await prisma.pixelArt.findFirst({
       where: {
         id: pixelArtId,
-        // deletedAt: null, // ✅ prevent copying deleted art//TODO uncomment this
+        deletedAt: null,
       },
     });
 
@@ -57,16 +58,17 @@ export async function POST(request) {
           data: original.data,
           gridSize: original.gridSize,
           imageUrl: original.imageUrl,
-          editable: true,
+          canCopy: true,
           profileId: profile.id,
-          addToTodaysPixelArts: false,
+          visibilityStatus: VISIBILITY_STATUS.PUBLIC,
+          deletedAt: null
         },
       });
 
       await tx.profile.update({
         where: { id: profile.id },
         data: {
-          pixelArtCount: { increment: 1 },
+          pixelArtsCount: { increment: 1 },
         },
       });
 
@@ -78,9 +80,9 @@ export async function POST(request) {
       pixelArt: result,
     });
   } catch (error) {
-    console.error("Error copying pixel art:", error);
+    console.error("Error copying Pixel Art:", error);
     return NextResponse.json(
-      { error: "Failed to copy pixel art" },
+      { error: "Failed to copy Pixel Art" },
       { status: 500 }
     );
   }

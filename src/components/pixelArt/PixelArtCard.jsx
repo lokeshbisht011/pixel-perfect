@@ -9,9 +9,10 @@ import Avatar from "boring-avatars";
 import { motion } from "framer-motion";
 import { useToast } from "../ui/use-toast";
 import ShareModal from "../ShareModal";
-import PixelArtModal from "./PixelArtModal";
+// import PixelArtModal from "./PixelArtModal";
 import { useRouter } from "next/navigation";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import PixelArtModal from "./modal/PixelArtModal";
 
 const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   const { toast } = useToast();
@@ -105,14 +106,26 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
       });
 
       if (res.ok) {
-        toast.success("Pixel Art deleted successfully!");
+        toast({
+          title: "",
+          description: "Pixel Art deleted successfully!",
+          variant: "default",
+        });
         setShowDeleteConfirm(false);
         onClose();
       } else {
-        toast.error("Failed to delete Pixel Art. Please try again.");
+        toast({
+          title: "",
+          description: "Failed to delete Pixel Art. Please try again.",
+          variant: "default",
+        });
       }
     } catch (err) {
-      toast.error("Network error. Failed to delete Pixel Art.");
+      toast({
+        title: "",
+        description: "Failed to delete Pixel Art. Please try again.",
+        variant: "default",
+      });
       console.error("Error deleting Pixel Art:", err);
     } finally {
       setDeleting(false);
@@ -122,7 +135,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
 
   return (
     <motion.div
-      className="pixel-card group w-full snap-start cursor-pointer"
+      className="pixel-card-single group w-full snap-start cursor-pointer"
       whileHover={{ y: -5 }}
       onClick={() => setIsModalOpen(true)}
     >

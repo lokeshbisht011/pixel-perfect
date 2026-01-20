@@ -50,7 +50,7 @@ const Index = () => {
         onClose={closeBadgeModal}
       />
       <div className="min-h-screen bg-background relative overflow-hidden">
-        <FloatingPixelIcons />
+        {/* <FloatingPixelIcons /> */}
 
         <motion.div
           className="relative z-10"

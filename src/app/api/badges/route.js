@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/authOptions";
-import { BADGES } from "@/lib/utils";
+import { BADGES } from "@/lib/badges";
 
 export async function GET() {
   try {
@@ -19,7 +19,7 @@ export async function GET() {
     const profile = await prisma.profile.findUnique({
       where: { email: session.user.email },
       select: {
-        pixelArtCount: true,
+        pixelArtsCount: true,
         commentsCount: true,
         currentStreak: true,
         pixelArtsLikedCount: true,
@@ -39,7 +39,7 @@ export async function GET() {
 
     // 3️⃣ Prepare stats object
     const stats = {
-      pixelArtCount: profile.pixelArtCount,
+      pixelArtsCount: profile.pixelArtsCount,
       commentsCount: profile.commentsCount,
       currentStreak: profile.currentStreak,
       pixelArtsLikedCount: profile.pixelArtsLikedCount,

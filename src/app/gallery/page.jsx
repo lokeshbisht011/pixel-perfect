@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/layout/Layout';
-import DoodlesByDateSection from '@/components/pixelArt/DoodleSection';
+import PixelArtsByDateSection from '@/components/pixelArt/DoodleSection'; // you might want to rename the file too
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,10 @@ import { Search } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 
-const fetchDoodlesByDate = async (date) => {
+const fetchPixelArtsByDate = async (date) => {
   try {
-    const res = await fetch(`/api/doodles?date=${date}`);
-    if (!res.ok) throw new Error("Failed to fetch doodles");
+    const res = await fetch(`/api/pixelArts?date=${date}`);
+    if (!res.ok) throw new Error("Failed to fetch pixel arts");
     return await res.json();
   } catch (error) {
     console.error(error);
@@ -27,9 +27,9 @@ const formatDate = (daysAgo = 0) => {
   return d.toISOString().split("T")[0];
 };
 
-const Gallery = () => {
+const PixelArtGallery = () => {
   const { data: session } = useSession();
-  const [doodlesByDate, setDoodlesByDate] = useState([]);
+  const [pixelArtsByDate, setPixelArtsByDate] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [loading, setLoading] = useState(false);
@@ -37,15 +37,17 @@ const Gallery = () => {
   const observerTarget = useRef(null);
   const daysLoaded = useRef(0);
 
-  const loadMoreDoodles = async () => {
+  const loadMorePixelArts = async () => {
     if (loading || !hasMore) return;
-
     setLoading(true);
     const dateToFetch = formatDate(daysLoaded.current);
-    const data = await fetchDoodlesByDate(dateToFetch);
+    const data = await fetchPixelArtsByDate(dateToFetch);
 
-    if (data && data.doodles?.length > 0) {
-      setDoodlesByDate(prev => [...prev, { date: dateToFetch, doodles: data.doodles, prompt: data.prompt }]);
+    if (data && data.pixelArts?.length > 0) {
+      setPixelArtsByDate(prev => [
+        ...prev,
+        { date: dateToFetch, pixelArts: data.pixelArts, prompt: data.prompt }
+      ]);
       daysLoaded.current += 1;
       setLoading(false);
     } else {
@@ -58,51 +60,52 @@ const Gallery = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
-          loadMoreDoodles();
+          loadMorePixelArts();
         }
       },
       { threshold: 1.0 }
     );
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
+    if (observerTarget.current) observer.observe(observerTarget.current);
     return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
+      if (observerTarget.current) observer.unobserve(observerTarget.current);
     };
   }, [loading, hasMore]);
 
-
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
+    // Implement server-side or client-side search here
   };
 
-  const handleSortChange = (value) => {
-    setSortBy(value);
-    console.log('Sorting by:', value);
-  };
+  const handleSortChange = (value) => setSortBy(value);
+
+  const tags = ["All Prompts", "Fantasy Creature", "Underwater City", "Space Explorer", "Dream Landscape"];
 
   return (
     <Layout>
       <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold">Doodle Gallery</h1>
-          <div className="flex w-full md:w-auto flex-col sm:flex-row gap-4">
-            <form onSubmit={handleSearch} className="relative w-full sm:w-64">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Pixel Art Gallery</h1>
+            <p className="text-muted-foreground mt-1">
+              Explore daily pixel art created by our community
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto">
+            <form onSubmit={handleSearch} className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search doodles..."
+                placeholder="Search by prompt, creator, or tag..."
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search pixel arts"
               />
             </form>
-            
+
             <Select value={sortBy} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Sort by" />
@@ -114,33 +117,46 @@ const Gallery = () => {
             </Select>
           </div>
         </div>
-        
-        <div className="mb-6 flex gap-2 flex-wrap">
-          <Button variant="outline" className="rounded-full" size="sm">All Prompts</Button>
-          <Button variant="outline" className="rounded-full" size="sm">Fantasy Creature</Button>
-          <Button variant="outline" className="rounded-full" size="sm">Underwater City</Button>
-          <Button variant="outline" className="rounded-full" size="sm">Space Explorer</Button>
-          <Button variant="outline" className="rounded-full" size="sm">Dream Landscape</Button>
+
+        {/* Tags / Filters */}
+        <div className="mb-6 flex gap-2 overflow-x-auto py-1">
+          {tags.map((tag) => (
+            <Button key={tag} variant="outline" size="sm" className="rounded-full flex-shrink-0">
+              {tag}
+            </Button>
+          ))}
         </div>
-        
-        <motion.div initial="hidden" animate="visible" className="space-y-8">
-          {doodlesByDate.map((section) => (
-            <DoodlesByDateSection
+
+        {/* Pixel Arts */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          className="space-y-8"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+          }}
+        >
+          {pixelArtsByDate.length === 0 && !loading && (
+            <p className="text-center text-muted-foreground">No pixel arts yet.</p>
+          )}
+
+          {pixelArtsByDate.map((section) => (
+            <PixelArtsByDateSection
               key={section.date}
               date={section.date}
               prompt={section.prompt}
-              doodles={section.doodles}
+              pixelArts={section.pixelArts}
               currentUserProfile={session?.user || null}
             />
           ))}
         </motion.div>
 
-        <div ref={observerTarget} className="py-8">
-          {loading && (
-            <p className="text-center text-muted-foreground">Loading more doodles...</p>
-          )}
-          {!hasMore && (
-            <p className="text-center text-muted-foreground">You've reached the end of the gallery.</p>
+        {/* Loading / End */}
+        <div ref={observerTarget} className="py-8 text-center">
+          {loading && <p className="text-muted-foreground">Loading more pixel arts...</p>}
+          {!hasMore && pixelArtsByDate.length > 0 && (
+            <p className="text-muted-foreground">You've reached the end of the gallery.</p>
           )}
         </div>
       </div>
@@ -148,4 +164,4 @@ const Gallery = () => {
   );
 };
 
-export default Gallery;
+export default PixelArtGallery;

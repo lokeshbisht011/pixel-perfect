@@ -7,7 +7,7 @@ export async function GET(req, { params }) {
   const arts = await prisma.pixelArt.findMany({
     where: {
       profile: { username: params.username },
-      //deletedAt: null,//TODO Uncomment this
+      deletedAt: null,
     },
     orderBy: { createdAt: "desc" },
     take: 12,

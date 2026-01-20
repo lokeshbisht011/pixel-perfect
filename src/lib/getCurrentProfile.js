@@ -14,7 +14,7 @@ export async function getCurrentProfile() {
       email: true,
       username: true,
       avatarConfig: true,
-      pixelArtCount: true,
+      pixelArtsCount: true,
       commentsCount: true,
       currentStreak: true,
       pixelArtsLikedCount: true,

@@ -47,7 +47,7 @@ const FloatingPixelIcons = () => {
             alt={icon.alt} 
             width={80} 
             height={80} 
-            className="opacity-70 md:opacity-70 image-pixelated w-20 h-20 md:w-32 md:h-32"
+            className="opacity-30 md:opacity-30 image-pixelated w-20 h-20 md:w-32 md:h-32"
           />
         </motion.div>
       ))}

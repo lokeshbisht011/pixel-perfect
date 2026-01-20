@@ -37,7 +37,7 @@ model Profile {
   comments      Comment[]
 
   // Stats for Gamification
-  pixelArtCount      Int      @default(0)
+  pixelArtsCount      Int      @default(0)
   likesReceivedCount Int      @default(0)
   pixelArtsLikedCount Int      @default(0)
   commentsCount       Int      @default(0)
@@ -69,8 +69,9 @@ model PixelArt {
   title         String
   
   // Visibility & Permissions
-  editable      Boolean   @default(true) // Matches your "Allow others to edit" checkbox
-  addToTodaysPixelArts      Boolean   @default(true) // Matches your "Add to Today's Pixel Arts" checkbox
+  canCopy      Boolean   @default(true)
+  visibilityStatus      String
+  contentRating String @default("NOT_RATED")
   
   likesCount    Int       @default(0)
   commentsCount  Int     @default(0)
@@ -96,7 +97,7 @@ model DailyPrompt {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
   prompt            String
   promptDescription String
-  promptDate        DateTime  @unique // Used to fetch the "Prompt of the day"
+  promptDate        String  @unique
 
   pixelArts         PixelArt[]
 
@@ -191,6 +192,7 @@ model Badge {
   requirement Int      @default(1)
   type        String
   profiles    BadgeOnProfile[]
+  tier        Int
 }
 
 model BadgeOnProfile {

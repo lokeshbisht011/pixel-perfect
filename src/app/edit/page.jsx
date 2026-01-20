@@ -49,21 +49,20 @@ const PixelArtEditor = () => {
     data, // Matches the 'data' field in schema (the JSON string)
     gridSize, // New field from schema
     imageUrl,
-    addToTodaysPixelArts, // This maps to 'isPublic' in the schema
-    editable,
+    canCopy,
+    visibilityStatus,
     dailyPromptId,
   }) => {
     if (!title) {
-      toast({ title: "Missing title", description: "Please add a title." });
+      toast({
+        title: "Missing title",
+        description: "Please name your masterpiece before saving!",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!session) {
-      toast({
-        title: "Sign in required",
-        description: "You must be signed in to edit a pixelArt.",
-        variant: "destructive",
-      });
       setIsLoginModalOpen(true);
       return;
     }
@@ -77,21 +76,21 @@ const PixelArtEditor = () => {
           data, // The JSON.stringify(fullGrid)
           gridSize, // e.g., 32, 64, or 128
           imageUrl, // The PNG base64 or storage URL
-          addToTodaysPixelArts,
-          editable,
+          canCopy,
+          visibilityStatus,
           dailyPromptId,
         }),
       });
 
       if (response.ok) {
         toast({
-          title: "PixelArt updated",
-          description: "Your pixelArt has been updated!",
+          title: "Pixel Art updated",
+          description: "Your Pixel Art has been updated!",
         });
       } else {
         toast({
           title: "Error",
-          description: "Failed to update pixelArt",
+          description: "Failed to update Pixel Art",
           variant: "destructive",
         });
       }

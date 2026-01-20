@@ -46,7 +46,7 @@ export async function POST(req) {
         },
         socialLinks: {},
 
-        pixelArtCount: 0,
+        pixelArtsCount: 0,
         commentsCount: 0,
         currentStreak: 0,
         likesReceivedCount: 0,

@@ -5,16 +5,28 @@ import { Loader2, Save, Download } from "lucide-react";
 
 const Settings = ({
   /* settings state */
-  allowEdit,
-  setAllowEdit,
-  addToTodaysPixelArts,
-  setAddToTodaysPixelArts,
+  canCopy,
+  setCanCopy,
+  submitToTodaysFeed,
+  setSubmitToTodaysFeed,
+  makePrivate,
+  setMakePrivate,
 
   /* actions */
   onSave,
   onDownload,
   isSaving,
 }) => {
+  const handleMakePrivateChange = (checked) => {
+    const value = !!checked;
+    setMakePrivate(value);
+
+    if (value) {
+      setCanCopy(false);
+      setSubmitToTodaysFeed(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Settings Section */}
@@ -22,35 +34,59 @@ const Settings = ({
         <h3 className="font-bold mb-4 text-card-foreground">Settings</h3>
 
         <div className="space-y-3">
+          {/* Allow Copy */}
           <div className="flex items-center space-x-3">
             <Checkbox
-              id="allowEdit"
-              checked={allowEdit}
-              onCheckedChange={(checked) => setAllowEdit(!!checked)}
+              id="canCopy"
+              checked={canCopy}
+              disabled={makePrivate}
+              onCheckedChange={(checked) => setCanCopy(!!checked)}
               className="border-2 border-primary data-[state=checked]:bg-primary"
             />
             <label
-              htmlFor="allowEdit"
-              className="text-sm font-mono cursor-pointer select-none text-card-foreground"
+              htmlFor="canCopy"
+              className={`text-sm font-mono cursor-pointer select-none ${
+                makePrivate ? "opacity-50" : ""
+              }`}
             >
-              Allow others to edit
+              Allow others to copy
             </label>
           </div>
 
+          {/* Submit to Today */}
           <div className="flex items-center space-x-3">
             <Checkbox
-              id="todaysPixelArts"
-              checked={addToTodaysPixelArts}
+              id="submitToTodaysFeed"
+              checked={submitToTodaysFeed}
+              disabled={makePrivate}
               onCheckedChange={(checked) =>
-                setAddToTodaysPixelArts(!!checked)
+                setSubmitToTodaysFeed(!!checked)
               }
               className="border-2 border-primary data-[state=checked]:bg-primary"
             />
             <label
-              htmlFor="todaysPixelArts"
-              className="text-sm font-mono cursor-pointer select-none text-card-foreground"
+              htmlFor="submitToTodaysFeed"
+              className={`text-sm font-mono cursor-pointer select-none ${
+                makePrivate ? "opacity-50" : ""
+              }`}
             >
-              Add to Today's Pixel Arts
+              Submit to Today&apos;s Feed
+            </label>
+          </div>
+
+          {/* Make Private */}
+          <div className="flex items-center space-x-3 pt-2 border-t border-border">
+            <Checkbox
+              id="makePrivate"
+              checked={makePrivate}
+              onCheckedChange={handleMakePrivateChange}
+              className="border-2 border-red-500 data-[state=checked]:bg-red-500"
+            />
+            <label
+              htmlFor="makePrivate"
+              className="text-sm font-mono cursor-pointer select-none text-red-500"
+            >
+              Make private (only visible to you)
             </label>
           </div>
         </div>

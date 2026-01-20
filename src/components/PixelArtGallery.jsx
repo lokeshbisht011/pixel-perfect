@@ -15,7 +15,12 @@ import Link from "next/link";
 import Avatar from "boring-avatars";
 import PixelArtCard from "./pixelArt/PixelArtCard";
 
-const HorizontalScrollRow = ({ title, date, limit = 12, profile={profile} }) => {
+const HorizontalScrollRow = ({
+  title,
+  date,
+  limit = 12,
+  profile = { profile },
+}) => {
   const [pixelArts, setPixelArts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,9 +28,8 @@ const HorizontalScrollRow = ({ title, date, limit = 12, profile={profile} }) => 
     const fetchPixelArts = async () => {
       try {
         setLoading(true);
-        const formattedDate = date.toISOString().split("T")[0];
         const res = await fetch(
-          `/api/pixelArts?date=${formattedDate}&limit=${limit}`
+          `/api/pixelArts?day=${"today"}&limit=${limit}`
         );
         const data = await res.json();
         setPixelArts(Array.isArray(data) ? data : []);
@@ -47,29 +51,33 @@ const HorizontalScrollRow = ({ title, date, limit = 12, profile={profile} }) => 
   return (
     <div className="mb-12">
       <div className="flex items-center justify-between px-2">
-        <h3 className="text-2xl font-mono font-bold flex items-center gap-2">
+        <h3 className="text-2xl font-mono font-bold flex items-center gap-2 mb-4">
           <Calendar className="w-6 h-6 text-pixel-neon-cyan" />
-          <span className="uppercase tracking-tighter text-md md:text-3xl">{title}</span>
+          <span className="uppercase tracking-tighter text-md md:text-3xl">
+            {title}
+          </span>
         </h3>
         <Link href={`/gallery?date=${date.toISOString().split("T")[0]}`}>
           <Button
             variant="ghost"
             className="font-mono text-pixel-neon-pink hover:bg-pixel-neon-pink/10"
           >
-            <span className="text-xs">VIEW ALL</span><ArrowRight className="ml-2 w-4 h-4" />
+            <span className="text-xs">VIEW ALL</span>
+            <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </Link>
       </div>
 
       <div className="relative group">
         {loading ? (
-          <div className="pt-4 md:pt-6 h-64 flex items-center justify-center border-2 border-dashed border-border">
+          <div className="mt-4 md:mt-6 h-64 flex items-center justify-center border-2 border-dashed border-border">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : pixelArts.length > 0 ? (
-          <div className="pt-4 md:pt-6 grid grid-flow-col auto-cols-[minmax(250px,1fr)] md:auto-cols-[minmax(350px,1fr)] gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2">
+          <div className="mt-4 md:mt-6 grid grid-flow-col auto-cols-[minmax(250px,250px)] md:auto-cols-[minmax(350px,350px)] gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2">
             {pixelArts.map((pixelArt) => (
               <PixelArtCard
+                key={pixelArt.id}
                 pixelArt={pixelArt}
                 currentUserProfile={profile}
                 onPixelArtDeleted={handlePixelArtDeleted}
@@ -77,10 +85,26 @@ const HorizontalScrollRow = ({ title, date, limit = 12, profile={profile} }) => 
             ))}
           </div>
         ) : (
-          <div className="h-48 flex flex-col items-center justify-center border-2 border-border bg-card/50">
-            <p className="font-mono text-muted-foreground">
-              NO PIXEL ART FOUND FOR THIS DAY
-            </p>
+          <div className="h-48 flex flex-col items-center justify-center border-2 border-border bg-card/50 px-4 text-center gap-2">
+            {title.toLowerCase().includes("today") ? (
+              <>
+                <p className="font-mono text-muted-foreground">
+                  No submissions today
+                </p>
+                <p className="font-mono text-pixel-neon-cyan mb-2">
+                  Be the first to submit your pixel art!
+                </p>
+                <Link href="/create">
+                  <Button variant="pixel" size="sm">
+                    Create Pixel Art
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <p className="font-mono text-muted-foreground">
+                No pixel art found for this day
+              </p>
+            )}
           </div>
         )}
       </div>

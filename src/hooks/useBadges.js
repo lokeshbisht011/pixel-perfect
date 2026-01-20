@@ -7,7 +7,7 @@ const calculateBadgeProgress = (badge, stats) => {
   if (!stats) return 0;
 
   const valueMap = {
-    pixel_art_count: stats.pixelArtCount,
+    pixel_art_count: stats.pixelArtsCount,
     comment_count: stats.commentsCount,
     streak: stats.currentStreak,
     pixel_arts_liked: stats.pixelArtsLikedCount,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/authOptions";
-import { BADGES } from "@/lib/utils";
+import { BADGES } from "@/lib/badges";
 
 export async function POST() {
   const session = await getServerSession(authOptions);
@@ -23,7 +23,7 @@ export async function POST() {
   const newlyEarned = [];
 
   const statMap = {
-    pixel_art_count: profile.pixelArtCount,
+    pixel_art_count: profile.pixelArtsCount,
     comment_count: profile.commentsCount,
     streak: profile.currentStreak,
     pixel_arts_liked: profile.pixelArtsLikedCount,

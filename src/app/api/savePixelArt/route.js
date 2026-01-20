@@ -16,8 +16,8 @@ export async function POST(req) {
     data, // The JSON stringified grid array
     gridSize, // The integer size (e.g., 32)
     imageUrl, // The PNG preview
-    addToTodaysPixelArts, // Maps to 'Add to Today's Pixel Arts'
-    editable, // Maps to 'Allow others to edit'
+    canCopy,
+    visibilityStatus,
     dailyPromptId,
   } = body;
 
@@ -36,10 +36,11 @@ export async function POST(req) {
         data, // Stores the grid array
         gridSize: parseInt(gridSize),
         imageUrl,
-        addToTodaysPixelArts: !!addToTodaysPixelArts,
-        editable: !!editable,
+        canCopy: !!canCopy,
+        visibilityStatus,
         profileId: profile.id,
         dailyPromptId,
+        deletedAt: null
       },
     });
 

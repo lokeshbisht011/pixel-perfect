@@ -8,6 +8,7 @@ import { Brush, Eraser, PaintBucket } from "lucide-react";
 import { toast } from "../ui/use-toast";
 import Toolbar from "./Toolbar";
 import Settings from "./Settings";
+import { VISIBILITY_STATUS } from "@/lib/utils";
 
 const STORAGE_KEY = "pixel-art-draft";
 
@@ -37,8 +38,9 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [title, setTitle] = useState(prompt?.prompt || "Untitled");
-  const [addToTodaysPixelArts, setAddToTodaysPixelArts] = useState(true);
-  const [allowEdit, setAllowEdit] = useState(true);
+  const [submitToTodaysFeed, setSubmitToTodaysFeed] = useState(true);
+  const [makePrivate, setMakePrivate] = useState(false);
+  const [canCopy, setCanCopy] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const activeColorRef = useRef(activeColor);
@@ -117,11 +119,11 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   useEffect(() => {
     if (pixelArt) {
       if (pixelArt.dailyPromptId) {
-        setAddToTodaysPixelArts(true);
+        setSubmitToTodaysFeed(true);
       } else {
-        setAddToTodaysPixelArts(false);
+        setSubmitToTodaysFeed(false);
       }
-      setAllowEdit(pixelArt.editable);
+      setCanCopy(pixelArt.canCopy);
       if (!pixelArt.title && prompt?.prompt) {
         setTitle(prompt.prompt);
       }
@@ -133,15 +135,15 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
         setSliderGridSize(loadedGridSize);
         saveCanvasState({ grid: data, gridSize: loadedGridSize }, true);
       } catch (err) {
-        console.error("Error parsing pixel art data:", err);
+        console.error("Error parsing Pixel Art data:", err);
         const emptyGrid = createEmptyGrid(gridSize);
         setFullGrid(emptyGrid);
         saveCanvasState({ grid: emptyGrid, gridSize: gridSize }, true);
       }
     } else if (prompt?.prompt) {
       setTitle(prompt.prompt);
-      setAddToTodaysPixelArts(true);
-      setAllowEdit(true);
+      setSubmitToTodaysFeed(true);
+      setCanCopy(true);
     }
   }, [pixelArt, prompt]);
 
@@ -379,15 +381,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
       const galleryPreviewUrl = canvas.toDataURL("image/png");
 
-      // 2. Execute Save
       await onSave({
         title: title,
-        data: JSON.stringify(croppedGrid), // Just the array!
-        gridSize, // Saved in its own DB column
+        data: JSON.stringify(croppedGrid),
+        gridSize,
         imageUrl: galleryPreviewUrl,
-        addToTodaysPixelArts,
-        editable: allowEdit,
-        dailyPromptId: prompt?.id || null,
+        canCopy: canCopy,
+        visibilityStatus: makePrivate ? VISIBILITY_STATUS.PRIVATE : VISIBILITY_STATUS.PUBLIC,
+        dailyPromptId: submitToTodaysFeed ? prompt?.id : null,
       });
     } catch (err) {
       console.error("Failed to save:", err);
@@ -471,6 +472,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
             <div className="flex-1 overflow-y-auto space-y-6 pr-1">
               <Toolbar
                 tools={tools}
+                title={title}
+                setTitle={setTitle}
                 activeTool={activeTool}
                 onToolChange={setActiveTool}
                 onUndo={handleUndo}
@@ -487,10 +490,12 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
               <Separator />
 
               <Settings
-                allowEdit={allowEdit}
-                setAllowEdit={setAllowEdit}
-                addToTodaysPixelArts={addToTodaysPixelArts}
-                setAddToTodaysPixelArts={setAddToTodaysPixelArts}
+                canCopy={canCopy}
+                setCanCopy={setCanCopy}
+                submitToTodaysFeed={submitToTodaysFeed}
+                setSubmitToTodaysFeed={setSubmitToTodaysFeed}
+                makePrivate={makePrivate}
+                setMakePrivate={setMakePrivate}
                 onSave={handleSave}
                 onDownload={handleDownload}
                 isSaving={isSaving}

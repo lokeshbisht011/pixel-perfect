@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
   try {
     const pixelArt = await prisma.pixelArt.findUnique({
       where: { id: pixelArtId,
-        // deletedAt: null//TODO remove this
+        deletedAt: null
        },
       include: {
         profile: {
@@ -69,7 +69,7 @@ export async function DELETE(req, { params }) {
   try {
     const profile = await prisma.profile.findUnique({
       where: { email: session.user.email },
-      select: { id: true, pixelArtCount: true },
+      select: { id: true, pixelArtsCount: true },
     });
 
     if (!profile) {
@@ -119,7 +119,7 @@ export async function DELETE(req, { params }) {
       prisma.profile.update({
         where: { id: profile.id },
         data: {
-          pixelArtCount: {
+          pixelArtsCount: {
             decrement: 1,
           },
         },

@@ -17,8 +17,8 @@ export async function PUT(req, { params }) {
     data,           // The JSON stringified grid array
     gridSize,       // The integer size (e.g., 32)
     imageUrl,       // The PNG preview
-    addToTodaysPixelArts,       // Maps to 'Add to Today's Pixel Arts'
-    editable,       // Maps to 'Allow others to edit'
+    canCopy,
+    visibilityStatus,
     dailyPromptId
   } = body;
 
@@ -47,8 +47,8 @@ export async function PUT(req, { params }) {
         data,
         gridSize: parseInt(gridSize),
         imageUrl,
-        addToTodaysPixelArts: !!addToTodaysPixelArts,
-        editable: !!editable,
+        canCopy: !!canCopy,
+        visibilityStatus: visibilityStatus,
         dailyPromptId,
         updatedAt: new Date(),
       },

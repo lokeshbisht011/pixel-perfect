@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Share2, Edit, MessageCircle, Trash2 } from "lucide-react";
+import { Heart, Share2, Edit, MessageCircle, Trash2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import BoringAvatar from "boring-avatars";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useBadges } from "@/hooks/useBadges";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import { DialogClose, DialogTitle } from "@radix-ui/react-dialog";
 
 const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
   const [fullPixelArt, setFullPixelArt] = useState(null);
@@ -66,6 +67,7 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-3xl flex items-center justify-center">
+          <DialogTitle></DialogTitle>
           Loading…
         </DialogContent>
       </Dialog>
@@ -156,7 +158,12 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-lg">
         {pixelArt && (
           <div className="flex w-full h-[600px] border">
@@ -203,7 +210,7 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
 
               {/* Main Content (Title & Comments) */}
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-10">
                   <h2 className="font-semibold text-lg">{pixelArt.title}</h2>
                 </div>
                 {/* Comments Section */}

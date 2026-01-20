@@ -1,109 +1,82 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import { BADGES } from "../src/lib/badges.js";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
-const BADGES = {
-  FIRST_PIXEL_ART: {
-    id: "first_pixel_art",
-    name: "First Creation",
-    description: "Created your first Pixel Art",
-    icon: "🎨",
-    requirement: 1,
-    type: "pixel_art_count",
+const DAILY_PROMPTS = [
+  {
+    prompt: "Pixel your breakfast",
+    promptDescription: "Draw your favorite breakfast item in pixels.",
   },
-  PIXEL_ART_COLLECTOR_10: {
-    id: "pixel_art_collector_10",
-    name: "Pixel Art Collector",
-    description: "Created 10 Pixel Arts",
-    icon: "🖼️",
-    requirement: 10,
-    type: "pixel_art_count",
+  {
+    prompt: "Create a night scene",
+    promptDescription:
+      "Use dark colors and lights to make a nighttime pixel scene.",
   },
-  PIXEL_ART_MASTER_100: {
-    id: "pixel_art_master_100",
-    name: "Pixel Master",
-    description: "Created 100 Pixel Arts",
-    icon: "🏆",
-    requirement: 100,
-    type: "pixel_art_count",
+  {
+    prompt: "Draw your pet",
+    promptDescription:
+      "Create a pixel art version of your pet or favorite animal.",
   },
-  FIRST_COMMENT: {
-    id: "first_comment",
-    name: "Commentator",
-    description: "Left your first comment",
-    icon: "💬",
-    requirement: 1,
-    type: "comment_count",
+  {
+    prompt: "Abstract shapes",
+    promptDescription: "Play with colors and shapes for an abstract pixel art.",
   },
-  FIRST_STREAK: {
-    id: "first_streak",
-    name: "Consistency",
-    description: "Maintained a 3-day streak",
-    icon: "🔥",
-    requirement: 3,
-    type: "streak",
+  {
+    prompt: "Pixel a plant",
+    promptDescription: "Draw a plant, flower, or tree in pixel art style.",
   },
-  STREAK_MASTER: {
-    id: "streak_master",
-    name: "Streak Master",
-    description: "Maintained a 7-day streak",
-    icon: "🔥🔥",
-    requirement: 7,
-    type: "streak",
+  {
+    prompt: "Retro icon",
+    promptDescription: "Design a retro-inspired icon or logo in pixels.",
   },
-  LIKER_1: {
-    id: "liker_1",
-    name: "First Liker",
-    description: "Liked your first Pixel Art",
-    icon: "👍",
-    requirement: 1,
-    type: "pixel_arts_liked",
+  {
+    prompt: "Fantasy creature",
+    promptDescription: "Create a mythical or fantasy creature in pixel art.",
   },
-  LIKER_10: {
-    id: "liker_10",
-    name: "Thumbs Up",
-    description: "Liked 10 Pixel Arts",
-    icon: "👍👍",
-    requirement: 10,
-    type: "pixel_arts_liked",
+  {
+    prompt: "Emoji in pixels",
+    promptDescription: "Recreate your favorite emoji as pixel art.",
   },
-  LIKER_100: {
-    id: "liker_100",
-    name: "Big Fan",
-    description: "Liked 100 Pixel Arts",
-    icon: "💖",
-    requirement: 100,
-    type: "pixel_arts_liked",
+  {
+    prompt: "Pixel vehicle",
+    promptDescription: "Draw a car, bike, or spaceship in pixel style.",
   },
-  LIKED_1: {
-    id: "liked_1",
-    name: "First Like",
-    description: "Got your first like",
-    icon: "⭐",
-    requirement: 1,
-    type: "likes_received",
+  {
+    prompt: "Pixel self-portrait",
+    promptDescription: "Try making a pixel art version of yourself.",
   },
-  LIKED_10: {
-    id: "liked_10",
-    name: "Popular",
-    description: "Received 10 likes",
-    icon: "🌟",
-    requirement: 10,
-    type: "likes_received",
-  },
-  LIKED_100: {
-    id: "liked_100",
-    name: "Superstar",
-    description: "Received 100 likes",
-    icon: "✨",
-    requirement: 100,
-    type: "likes_received",
-  },
-};
+];
 
-const BADGES_DATA = Object.values(BADGES)
+async function seedDailyPrompts() {
+  const today = new Date();
+
+  for (let i = 0; i < DAILY_PROMPTS.length; i++) {
+    const promptDateObj = new Date(today);
+    promptDateObj.setDate(today.getDate() + i); // today + i days
+
+    // Convert to YYYY-MM-DD string
+    const promptDate = promptDateObj.toISOString().split("T")[0];
+
+    const { prompt, promptDescription } = DAILY_PROMPTS[i];
+
+    await prisma.dailyPrompt.upsert({
+      where: { promptDate }, // string match
+      update: {},
+      create: {
+        prompt,
+        promptDescription,
+        promptDate, // store as string, not Date
+      },
+    });
+  }
+
+  console.log("Daily prompts seeded for the next days!");
+}
+
 
 async function main() {
-  for (const badgeData of BADGES_DATA) {
+  // Seed badges
+  for (const badgeData of Object.values(BADGES)) {
     await prisma.badge.upsert({
       where: { id: badgeData.id },
       update: {},
@@ -113,17 +86,23 @@ async function main() {
         description: badgeData.description,
         icon: badgeData.icon,
         requirement: badgeData.requirement,
-        type: badgeData.type
+        type: badgeData.type,
+        tier: badgeData.tier,
       },
-    })
+    });
   }
-  console.log('Badges seeded successfully!')
+
+  console.log("Badges seeded successfully!");
+
+  // Seed daily prompts
+  await seedDailyPrompts();
 }
+
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
