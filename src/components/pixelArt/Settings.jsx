@@ -30,7 +30,7 @@ const Settings = ({
   return (
     <div className="space-y-6">
       {/* Settings Section */}
-      <div className="pixel-card-single bg-card p-4">
+      <div className="md:pixel-card-single bg-card md:p-4 p-3">
         <h3 className="font-bold mb-4 text-card-foreground">Settings</h3>
 
         <div className="space-y-3">

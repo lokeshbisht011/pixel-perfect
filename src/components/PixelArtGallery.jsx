@@ -60,7 +60,7 @@ const HorizontalScrollRow = ({
         <Link href={`/gallery?date=${date.toISOString().split("T")[0]}`}>
           <Button
             variant="ghost"
-            className="font-mono text-pixel-neon-pink hover:bg-pixel-neon-pink/10"
+            className="font-mono text-pixel-neon-pink "
           >
             <span className="text-xs">VIEW ALL</span>
             <ArrowRight className="ml-2 w-4 h-4" />

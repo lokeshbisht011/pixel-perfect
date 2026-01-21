@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Brush, Eraser, PaintBucket } from "lucide-react";
+import { Brush, Eraser, Move, PaintBucket } from "lucide-react";
 import { toast } from "../ui/use-toast";
 import Toolbar from "./Toolbar";
 import Settings from "./Settings";
@@ -42,11 +42,17 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [makePrivate, setMakePrivate] = useState(false);
   const [canCopy, setCanCopy] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const panOriginRef = useRef({ x: 0, y: 0 });
   const activeColorRef = useRef(activeColor);
   const activeToolRef = useRef(activeTool);
   const undoInProgressRef = useRef(false);
   const gridRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const draft = loadDraft();
@@ -220,6 +226,91 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     }
   };
 
+  const clampPan = useCallback(
+    (x, y) => {
+      if (!containerRef.current || !gridRef.current) {
+        return { x, y };
+      }
+
+      const container = containerRef.current.getBoundingClientRect();
+      const gridSizePx = gridRef.current.offsetWidth * zoom;
+
+      const maxX = Math.max(0, (gridSizePx - container.width) / 2);
+      const maxY = Math.max(0, (gridSizePx - container.height) / 2);
+
+      return {
+        x: Math.min(maxX, Math.max(-maxX, x)),
+        y: Math.min(maxY, Math.max(-maxY, y)),
+      };
+    },
+    [zoom]
+  );
+
+  const getSnappedPan = useCallback(
+    (x, y, nextZoom = zoom) => {
+      if (!containerRef.current || !gridRef.current) {
+        return { x, y };
+      }
+
+      const container = containerRef.current.getBoundingClientRect();
+
+      const baseSize = gridRef.current.offsetWidth;
+      const scaledSize = baseSize * nextZoom;
+
+      // If canvas is smaller than viewport → CENTER IT
+      if (scaledSize <= container.width) {
+        x = 0;
+      } else {
+        const minX = -(scaledSize - container.width) / 2;
+        const maxX = (scaledSize - container.width) / 2;
+        x = Math.min(maxX, Math.max(minX, x));
+      }
+
+      if (scaledSize <= container.height) {
+        y = 0;
+      } else {
+        const minY = -(scaledSize - container.height) / 2;
+        const maxY = (scaledSize - container.height) / 2;
+        y = Math.min(maxY, Math.max(minY, y));
+      }
+
+      return { x, y };
+    },
+    [zoom]
+  );
+
+  const handleCanvasPointerDown = (e) => {
+    if (activeTool !== "pan") return;
+
+    setIsPanning(true);
+    panStartRef.current = {
+      x: e.clientX - panOffset.x,
+      y: e.clientY - panOffset.y,
+    };
+    // panStartRef.current = { x: e.clientX, y: e.clientY };
+    // panOriginRef.current = { ...panOffset };
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleCanvasPointerMove = (e) => {
+    if (!isPanning || activeTool !== "pan") return;
+
+    const nextX = e.clientX - panStartRef.current.x;
+    const nextY = e.clientY - panStartRef.current.y;
+
+    setPanOffset(getSnappedPan(nextX, nextY));
+  };
+
+  const handleCanvasPointerUp = (e) => {
+    if (!isPanning) return;
+
+    setIsPanning(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
   const handlePointerMove = (e) => {
     if (!isDrawing || activeTool === "fill") return;
 
@@ -228,8 +319,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     const rect = grid.getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX - rect.left)
+    const y = (e.clientY - rect.top)
 
     const col = Math.floor((x / rect.width) * gridSize);
     const row = Math.floor((y / rect.height) * gridSize);
@@ -250,26 +341,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     saveCanvasState({ grid: fullGrid, gridSize: fullGrid.length });
   };
 
-  const handleMouseDown = (e, row, col) => {
-    e.preventDefault();
-    setIsDrawing(true);
-    if (activeTool === "fill") {
-      handleFill(row, col);
-    } else {
-      handlePixelClick(row, col);
-    }
-  };
+  const handleZoomChange = (nextZoom) => {
+    setPanOffset((prev) => {
+      const scale = nextZoom / zoom;
 
-  const handleMouseMove = (e, row, col) => {
-    if (!isDrawing || activeTool === "fill") return;
-    handlePixelClick(row, col);
-  };
+      return getSnappedPan(prev.x * scale, prev.y * scale, nextZoom);
+    });
 
-  const handleMouseUp = () => {
-    if (isDrawing) {
-      setIsDrawing(false);
-      saveCanvasState({ grid: fullGrid, gridSize: fullGrid.length });
-    }
+    setZoom(nextZoom);
   };
 
   const handleUndo = () => {
@@ -387,7 +466,9 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
         gridSize,
         imageUrl: galleryPreviewUrl,
         canCopy: canCopy,
-        visibilityStatus: makePrivate ? VISIBILITY_STATUS.PRIVATE : VISIBILITY_STATUS.PUBLIC,
+        visibilityStatus: makePrivate
+          ? VISIBILITY_STATUS.PRIVATE
+          : VISIBILITY_STATUS.PUBLIC,
         dailyPromptId: submitToTodaysFeed ? prompt?.id : null,
       });
     } catch (err) {
@@ -406,7 +487,13 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     { id: "brush", icon: Brush, label: "Brush" },
     { id: "eraser", icon: Eraser, label: "Eraser" },
     { id: "fill", icon: PaintBucket, label: "Fill" },
+    { id: "pan", icon: Move, label: "Pan" },
   ];
+
+  useEffect(() => {
+    if (!gridRef.current) return;
+    gridRef.current.style.cursor = activeTool === "pan" ? "grab" : "crosshair";
+  }, [activeTool]);
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -429,20 +516,41 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           {/* Main Canvas */}
           <div className="lg:col-span-2">
             <div className="canvas-card bg-card p-2 md:p-4 max-w-[600px] h-full">
-              <div className="border-4 border-border bg-white rounded-none overflow-hidden h-full">
+              <div
+                ref={containerRef}
+                className="border-4 border-border bg-white rounded-none overflow-hidden h-full"
+              >
                 <div
                   ref={gridRef}
-                  className="grid rounded-lg shadow-md overflow-hidden bg-white h-full touch-none"
+                  className="grid rounded-lg shadow-md overflow-hidden bg-white h-full touch-none aspect-square"
                   style={{
                     gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
                     gridTemplateRows: `repeat(${gridSize}, 1fr)`,
-                    aspectRatio: "1 / 1",
+                    transform: `
+                      translate(${panOffset.x}px, ${panOffset.y}px)
+                      scale(${zoom})
+                    `,
+                    transformOrigin: "center",
+                    cursor: activeTool === "pan" ? "grab" : "crosshair",
                   }}
-                  // onMouseUp={handleMouseUp}
-                  // onMouseLeave={handleMouseUp}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                  onPointerLeave={handlePointerUp}
+                  onPointerDown={
+                    activeTool === "pan" ? handleCanvasPointerDown : undefined
+                  }
+                  onPointerMove={
+                    activeTool === "pan"
+                      ? handleCanvasPointerMove
+                      : handlePointerMove
+                  }
+                  onPointerUp={
+                    activeTool === "pan"
+                      ? handleCanvasPointerUp
+                      : handlePointerUp
+                  }
+                  onPointerLeave={
+                    activeTool === "pan"
+                      ? handleCanvasPointerUp
+                      : handlePointerUp
+                  }
                 >
                   {displayGrid.map((row, rowIndex) =>
                     row.map((color, colIndex) => (
@@ -450,14 +558,10 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                         key={`${rowIndex}-${colIndex}`}
                         className="pixel touch-none select-none"
                         style={{ backgroundColor: color }}
-                        // onMouseDown={(e) =>
-                        //   handleMouseDown(e, rowIndex, colIndex)
-                        // }
-                        // onMouseEnter={(e) =>
-                        //   handleMouseMove(e, rowIndex, colIndex)
-                        // }
-                        onPointerDown={(e) =>
-                          handlePointerDown(e, rowIndex, colIndex)
+                        onPointerDown={
+                          activeTool !== "pan"
+                            ? (e) => handlePointerDown(e, rowIndex, colIndex)
+                            : undefined
                         }
                       />
                     ))
@@ -469,7 +573,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
           {/* Right Panel (Scrollable) */}
           <div className="flex flex-col h-full max-h-[600px] overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               <Toolbar
                 tools={tools}
                 title={title}
@@ -483,6 +587,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                 historyLength={history.length}
                 sliderGridSize={sliderGridSize}
                 setSliderGridSize={setSliderGridSize}
+                zoom={zoom}
+                handleZoomChange={handleZoomChange}
                 activeColor={activeColor}
                 setActiveColor={setActiveColor}
               />
