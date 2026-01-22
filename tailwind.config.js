@@ -41,6 +41,7 @@ module.exports = {
           "neon-cyan": "hsl(var(--pixel-neon-cyan))",
           "neon-green": "hsl(var(--pixel-neon-green))",
           "neon-yellow": "hsl(var(--pixel-neon-yellow))",
+          "neon-red": "hsl(var(--pixel-neon-red))",
           purple: "hsl(var(--pixel-purple))",
           blue: "hsl(var(--pixel-blue))",
         },

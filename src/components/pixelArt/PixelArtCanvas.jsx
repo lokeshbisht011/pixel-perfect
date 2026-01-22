@@ -287,14 +287,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       x: e.clientX - panOffset.x,
       y: e.clientY - panOffset.y,
     };
-    // panStartRef.current = { x: e.clientX, y: e.clientY };
-    // panOriginRef.current = { ...panOffset };
 
-    e.currentTarget.setPointerCapture(e.pointerId);
+    gridRef.current?.setPointerCapture(e.pointerId);
   };
 
   const handleCanvasPointerMove = (e) => {
     if (!isPanning || activeTool !== "pan") return;
+
+    e.preventDefault();
 
     const nextX = e.clientX - panStartRef.current.x;
     const nextY = e.clientY - panStartRef.current.y;
@@ -307,7 +307,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     setIsPanning(false);
     try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
+      gridRef.current?.releasePointerCapture(e.pointerId);
     } catch {}
   };
 
@@ -518,7 +518,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
             <div className="canvas-card bg-card p-2 md:p-4 max-w-[600px] h-full">
               <div
                 ref={containerRef}
-                className="border-4 border-border bg-white rounded-none overflow-hidden h-full"
+                className="border-4 border-border bg-white rounded-none overflow-hidden h-full touch-none overscroll-none"
               >
                 <div
                   ref={gridRef}

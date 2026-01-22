@@ -33,6 +33,7 @@ const CreateDoodle = () => {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pixelArtId, setPixelArtId] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
@@ -40,9 +41,7 @@ const CreateDoodle = () => {
     seconds: 0,
   });
 
-  const {
-    syncBadges
-  } = useBadges();
+  const { syncBadges } = useBadges();
 
   useEffect(() => {
     const fetchPrompt = async () => {
@@ -98,17 +97,17 @@ const CreateDoodle = () => {
   const handleSavePixelArt = async ({
     title,
     data, // Matches the 'data' field in schema (the JSON string)
-    gridSize,      // New field from schema
+    gridSize, // New field from schema
     imageUrl,
     canCopy,
     visibilityStatus,
     dailyPromptId, // Pass this if you're editing the daily challenge
   }) => {
     if (!title) {
-      toast({ 
-        title: "Missing title", 
+      toast({
+        title: "Missing title",
         description: "Please name your masterpiece before saving!",
-        variant: "destructive" 
+        variant: "destructive",
       });
       return;
     }
@@ -119,34 +118,44 @@ const CreateDoodle = () => {
     }
 
     try {
-      const response = await fetch('/api/savePixelArt', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          data,           // The JSON.stringify(fullGrid)
-          gridSize,               // e.g., 32, 64, or 128
-          imageUrl,               // The PNG base64 or storage URL
-          canCopy,
-          visibilityStatus,
-          dailyPromptId,
-        }),
-      });
+      const payload = {
+        title,
+        data,
+        gridSize,
+        imageUrl,
+        canCopy,
+        visibilityStatus,
+        dailyPromptId,
+      };
+
+      const response = await fetch(
+        pixelArtId ? `/api/updatePixelArt/${pixelArtId}` : "/api/savePixelArt",
+        {
+          method: pixelArtId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await response.json();
 
       if (response.ok) {
-        toast({
-          title: "Pixel Art Saved! 🎨",
-          description: dailyPromptId 
-            ? "Your art is now live in today's gallery." 
-            : "Your art has been saved to your profile.",
-        });
 
-        await syncBadges()
+        if (!pixelArtId) {
+          setPixelArtId(result.pixelArt.id);
+        } 
         
-        // Optional: Redirect to the newly created art page
-        // router.push(`/pixel/${result.doodle.id}`);
+        toast({
+          title: pixelArtId ? "Pixel Art Updated" : "Pixel Art Saved 🎨",
+          description: dailyPromptId
+            ? "Your art is live in today's gallery."
+            : "Saved to your profile.",
+        });        
+
+        if (!pixelArtId || visibilityStatus === "PUBLIC") {
+          await syncBadges();
+        }
+
       } else {
         throw new Error(result.error || "Failed to save");
       }

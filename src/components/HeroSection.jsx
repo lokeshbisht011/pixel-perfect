@@ -22,7 +22,7 @@ const HeroSection = () => {
         });
         if (!res.ok) return;
         const data = await res.json();
-        console.log(data)
+        console.log(data);
         setPrompt(data);
       } catch (err) {
         console.error(err);
@@ -42,11 +42,30 @@ const HeroSection = () => {
   return (
     <section className="relative py-14 md:py-24 px-4 overflow-hidden">
       <div className="max-w-4xl mx-auto relative z-10 text-center">
+        {/* Pixel Grid Background */}
+        <motion.div
+          className="absolute inset-0 bg-pixel-grid opacity-[0.5]"
+          style={{
+            backgroundSize: "24px 24px",
+          }}
+          animate={{
+            backgroundPositionX: ["0px", "24px"],
+            backgroundPositionY: ["0px", "24px"],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+
+        {/* <div className="absolute inset-0 bg-gradient-radial-soft" /> */}
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="canvas-card relative p-5 md:p-8"
+          className="border-4 border-border p-6 shadow-lg relative p-5 md:p-8"
         >
           {/* Floating pixels (kept, slowed slightly) */}
           <motion.div

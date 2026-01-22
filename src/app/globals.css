@@ -38,6 +38,7 @@
     --pixel-neon-cyan: 180 100% 70%;
     --pixel-neon-green: 120 100% 70%;
     --pixel-neon-yellow: 60 100% 70%;
+    --pixel-neon-red: 0 100% 70%;
     --pixel-purple: 280 100% 60%;
     --pixel-blue: 240 100% 60%;
 
@@ -130,7 +131,8 @@
 
   @media (min-width: 768px) {
     .pixel-card {
-      box-shadow: 8px 8px 0px hsl(var(--border)), 16px 16px 0px hsl(var(--muted));
+      box-shadow: 8px 8px 0px hsl(var(--border)),
+        16px 16px 0px hsl(var(--muted));
     }
   }
 
@@ -165,7 +167,7 @@
   }
 
   .neon-glow {
-    text-shadow: 0 0 5px currentColor
+    text-shadow: 0 0 5px currentColor;
   }
 }
 
@@ -223,4 +225,24 @@
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@layer utilities {
+  .bg-pixel-grid {
+    background-image: linear-gradient(
+        to right,
+        hsl(var(--border)) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .bg-gradient-radial-soft {
+    background-image: radial-gradient(
+      circle at center,
+      hsl(var(--pixel-neon-cyan) / 0.35),
+      transparent 50%
+    );
+  }
 }
