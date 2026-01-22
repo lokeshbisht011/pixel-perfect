@@ -34,7 +34,7 @@ const NewBadgeModal = ({ isOpen, onClose, badge }) => {
 
   const shareData = {
     title: "Badge Unlocked 🎉",
-    text: `I just earned the "${badge.name}" badge on A-Doodle-A-Day!`,
+    text: `I just earned the "${badge.name}" badge on PixelArtDaily!`,
     url: typeof window !== "undefined" ? window.location.href : "",
   };
 

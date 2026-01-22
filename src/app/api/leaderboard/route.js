@@ -37,13 +37,13 @@ export async function GET(req) {
         orderBy = { likesReceivedCount: "desc" };
         break;
 
-      case "top-doodlers":
-        orderBy = { doodles: { _count: "desc" } };
-        // We still need to filter by doodle creation time for top doodlers
+      case "top-pixelArtists":
+        orderBy = { pixelArt: { _count: "desc" } };
+
         if (timeframe !== 'overall') {
             const dateFilter = where.createdAt;
             where = {
-                doodles: {
+                pixelArt: {
                     some: {
                         createdAt: dateFilter
                     }
@@ -88,11 +88,11 @@ export async function GET(req) {
         },
         likesReceivedCount: true,
         maxStreakCount: true,
-        doodles: {
+        pixelArts: {
           select: {
             id: true
           },
-          where: where.doodles ? where.doodles.some : {}
+          where: where.pixelArts ? where.pixelArts.some : {}
         }
       },
     });
@@ -105,7 +105,7 @@ export async function GET(req) {
       badges: leader.badges.map(b => b.badge),
       mostLikes: leader.likesReceivedCount,
       streak: leader.maxStreakCount,
-      submissions: leader.doodles.length,
+      submissions: leader.pixelArts.length,
     }));
 
     return NextResponse.json(formattedLeaders);

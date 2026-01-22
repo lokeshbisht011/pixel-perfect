@@ -56,7 +56,7 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json({ success: true, pixelArt: updatedPixelArt });
   } catch (error) {
-    console.error('Error updating doodle:', error)
-    return NextResponse.json({ error: 'Failed to update doodle' }, { status: 500 })
+    console.error('Error updating Pixel Art:', error)
+    return NextResponse.json({ error: 'Failed to update Pixel Art' }, { status: 500 })
   }
 }

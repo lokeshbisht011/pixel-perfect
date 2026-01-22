@@ -46,9 +46,9 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, pixelArt });
   } catch (error) {
-    console.error("Error saving pixel art:", error);
+    console.error("Error saving Pixel Art:", error);
     return NextResponse.json(
-      { error: "Failed to save doodle" },
+      { error: "Failed to save Pixel Art" },
       { status: 500 }
     );
   }

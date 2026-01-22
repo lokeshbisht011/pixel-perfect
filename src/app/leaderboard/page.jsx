@@ -75,7 +75,7 @@ const Leaderboard = () => {
           icon: <Heart className="h-4 w-4 text-red-500" />,
           dataKey: 'mostLikes',
         };
-      case 'top-doodlers':
+      case 'top-pixelArtists':
         return {
           valueLabel: 'Submissions',
           icon: <Pencil className="h-4 w-4 text-blue-500" />,
@@ -107,10 +107,10 @@ const Leaderboard = () => {
                 <span>Most Liked</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="top-doodlers">
+            <TabsTrigger value="top-pixelArtists">
               <div className="flex items-center gap-1">
                 <Pencil className="h-4 w-4" />
-                <span>Top Doodlers</span>
+                <span>Top Pixel Artists</span>
               </div>
             </TabsTrigger>
             <TabsTrigger value="most-active">

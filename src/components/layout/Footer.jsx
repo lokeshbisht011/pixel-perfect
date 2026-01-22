@@ -25,7 +25,7 @@ const Footer = () => {
     {
       title: "Create",
       links: [
-        { name: "Pixel Editor", href: "#editor" },
+        { name: "Pixel Editor", href: "/create" },
         { name: "Tutorials", href: "#tutorials" },
         { name: "Tips & Tricks", href: "#tips" },
         { name: "Resources", href: "#resources" },
@@ -66,10 +66,9 @@ const Footer = () => {
                 <div className="w-8 h-8 bg-white rounded-sm"></div>
               </div>
               <h3 className="text-2xl font-bold font-mono">
-                <span className="text-pixel-neon-cyan">A</span>
-                <span className="text-pixel-neon-pink">Pixel</span>
-                <span className="text-pixel-neon-green">A</span>
-                <span className="text-pixel-neon-yellow">Day</span>
+                <span className="text-pixel-neon-cyan">Pixel</span>
+                <span className="text-pixel-neon-pink">Art</span>
+                <span className="text-pixel-neon-green">Daily</span>
               </h3>
             </motion.div>
             
@@ -182,7 +181,7 @@ const Footer = () => {
           </div>
           
           <div className="text-sm text-muted-foreground font-mono">
-            © 2024 A Pixel A Day. All rights reserved.
+            © 2024 PixelArtDaily. All rights reserved.
           </div>
         </motion.div>
 

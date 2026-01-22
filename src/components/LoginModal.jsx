@@ -26,17 +26,17 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
 
   const titleMap = {
     signin: "WELCOME BACK",
-    signup: "JOIN PIXEL A DAY",
+    signup: "JOIN PIXEL ART DAILY",
   };
 
   const descriptionMap = {
-    signin: "Sign in to continue your pixel art journey",
+    signin: "Sign in to continue your Pixel Art journey",
     signup: "Create an account to start your creative streak",
   };
 
   const reasonMessage =
-    reason === "save-doodle"
-      ? "You need to sign in to save your pixel art."
+    reason === "save-pixelArt"
+      ? "You need to sign in to save your Pixel Art."
       : null;
 
   const handleLogin = async (provider) => {

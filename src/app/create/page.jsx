@@ -27,7 +27,7 @@ const itemVariants = {
   visible: { y: 0, opacity: 1 },
 };
 
-const CreateDoodle = () => {
+const CreatePixelArt = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const { toast } = useToast();
@@ -193,7 +193,7 @@ const CreateDoodle = () => {
         <LoginModal
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
-          reason="save-doodle"
+          reason="save-pixelArt"
           callbackUrl="/create"
         />
       </motion.div>
@@ -201,4 +201,4 @@ const CreateDoodle = () => {
   );
 };
 
-export default CreateDoodle;
+export default CreatePixelArt;

@@ -76,7 +76,7 @@ const LeaderboardTable = ({ leaders, valueLabel, icon }) => {
                 <div className="flex items-center justify-end gap-1 font-semibold">
                   <span>{icon}</span>
                   {valueLabel === 'Most Liked' ? user.mostLikes : 
-                   valueLabel === 'Top Doodlers' ? user.submissions : 
+                   valueLabel === 'Top Pixel Artists' ? user.submissions : 
                    `${user.streak} days`}
                 </div>
               </td>

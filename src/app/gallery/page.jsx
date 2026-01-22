@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/layout/Layout';
-import PixelArtsByDateSection from '@/components/pixelArt/DoodleSection'; // you might want to rename the file too
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -141,7 +140,7 @@ const PixelArtGallery = () => {
             <p className="text-center text-muted-foreground">No pixel arts yet.</p>
           )}
 
-          {pixelArtsByDate.map((section) => (
+          {/* {pixelArtsByDate.map((section) => (
             <PixelArtsByDateSection
               key={section.date}
               date={section.date}
@@ -149,7 +148,7 @@ const PixelArtGallery = () => {
               pixelArts={section.pixelArts}
               currentUserProfile={session?.user || null}
             />
-          ))}
+          ))} */}
         </motion.div>
 
         {/* Loading / End */}
