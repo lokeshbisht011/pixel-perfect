@@ -9,21 +9,34 @@ import ProfilePixelArtsSection from "@/components/profile/ProfilePixelArtsSectio
 import ProfileBadgesSection from "@/components/profile/ProfileBadgesSection";
 import ProfileLikedSection from "@/components/profile/ProfileLikedSection";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
   const { username } = useParams();
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
 
+  const router = useRouter();
+
   useEffect(() => {
     const load = async () => {
-      const fetchProfile = await fetch("/api/profile/user")
-      const profileData = fetchProfile.ok ? await fetchProfile.json() : null;
+      const res = await fetch("/api/profile/user");
+
+      if (res.status === 404) {
+        router.replace("/404");
+        return;
+      }
+
+      if (!res.ok) {
+        console.error("Failed to load profile");
+        return;
+      }
+      const profileData = await res.json();
 
       setCurrentUserProfile(profileData);
     };
 
     load();
-  }, [username]);
+  }, [username, router]);
 
   return (
     <Layout>
@@ -38,7 +51,10 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="pixelArts">
-            <ProfilePixelArtsSection username={username} currentUserProfile={currentUserProfile} />
+            <ProfilePixelArtsSection
+              username={username}
+              currentUserProfile={currentUserProfile}
+            />
           </TabsContent>
 
           <TabsContent value="badges">

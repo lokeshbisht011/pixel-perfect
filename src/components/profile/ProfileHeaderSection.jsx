@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import ProfileHeader from "@/components/profile/ProfileHeader";
+import { useRouter } from "next/navigation";
 
 export default function ProfileHeaderSection({ username }) {
   const [profile, setProfile] = useState(null);
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
@@ -14,6 +17,11 @@ export default function ProfileHeaderSection({ username }) {
         fetch(`/api/profile/${username}/header`),
         fetch("/api/profile/user"),
       ]);
+
+      if (profileRes.status === 404) {
+        router.replace("/404");
+        return;
+      }
 
       const profileData = await profileRes.json();
       const meData = meRes.ok ? await meRes.json() : null;

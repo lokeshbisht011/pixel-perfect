@@ -82,6 +82,23 @@ const Header = ({ profile }) => {
           >
             Create
           </motion.a>
+          <motion.a
+            href="/leaderboard"
+            className="text-foreground hover:text-pixel-neon-yellow transition-colors font-mono"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Leaderboard
+          </motion.a>
+
+          <motion.a
+            href="/blog"
+            className="text-foreground hover:text-pixel-neon-cyan transition-colors font-mono"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Blog
+          </motion.a>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
@@ -212,6 +229,22 @@ const Header = ({ profile }) => {
                 className="px-4 py-3 hover:bg-muted"
               >
                 Create
+              </Link>
+
+              <Link
+                href="/leaderboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-3 hover:bg-muted"
+              >
+                Leaderboard
+              </Link>
+
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-3 hover:bg-muted"
+              >
+                Blog
               </Link>
 
               {isLoggedIn ? (
