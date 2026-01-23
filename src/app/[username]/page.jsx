@@ -30,20 +30,20 @@ export default function ProfilePage() {
         console.error("Failed to load profile");
         return;
       }
-      const profileData = await res.json();
+      const profileData =  await res.json()
 
       setCurrentUserProfile(profileData);
     };
 
     load();
-  }, [username, router]);
+  }, [username]);
 
   return (
     <Layout>
-      <div className="container py-6">
+      <div className="md:container md:py-6 px-4 py-4">
         <ProfileHeaderSection username={username} />
 
-        <Tabs defaultValue="pixelArts" className="mt-8">
+        <Tabs defaultValue="pixelArts" className="mt-4 ">
           <TabsList>
             <TabsTrigger value="pixelArts">Pixel Arts</TabsTrigger>
             <TabsTrigger value="badges">Badges</TabsTrigger>

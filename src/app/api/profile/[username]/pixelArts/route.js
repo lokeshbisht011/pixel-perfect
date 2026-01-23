@@ -18,6 +18,9 @@ export async function GET(req, { params }) {
       createdAt: true,
       likesCount: true,
       commentsCount: true,
+      canCopy: true,
+      visibilityStatus: true,
+      contentRating: true,
       profile: {
         select: {
           id: true,
@@ -36,7 +39,7 @@ export async function GET(req, { params }) {
   });
 
   return NextResponse.json(
-    arts.map(a => ({
+    arts.map((a) => ({
       ...a,
       likedByMe: currentProfile ? a.likes.length > 0 : false,
       likes: undefined,

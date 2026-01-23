@@ -5,7 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const dayParam = searchParams.get("day"); // "today" or "yesterday"
+  const dateParam = searchParams.get("date"); // YYYY-MM-DD
+  const query = searchParams.get("query")?.trim() || "";
   const limit = Math.min(parseInt(searchParams.get("limit") || "12", 10), 50);
 
   const session = await getServerSession(authOptions);
@@ -18,37 +19,36 @@ export async function GET(request) {
   const currentProfileId = profile?.id || null;
 
   try {
-    // ✅ Determine UTC date based on `day` param
-    // Determine the target date string in UTC
-    const now = new Date();
-    let targetDateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    // Build where condition for pixel arts
+    const whereCondition = {
+      deletedAt: null,
+      visibilityStatus: "PUBLIC",
+      contentRating: "NOT_RATED",
+    };
 
-    if (dayParam === "yesterday") {
-      const yesterday = new Date(now);
-      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-      targetDateStr = yesterday.toISOString().slice(0, 10);
+    if (dateParam) {
+      // Fetch daily prompt for that date
+      const dailyPrompt = await prisma.dailyPrompt.findUnique({
+        where: { promptDate: dateParam },
+        select: { id: true },
+      });
+
+      whereCondition.AND = {
+        dailyPromptId: dailyPrompt.id
+      }
     }
 
-    // Fetch daily prompt for that date
-    const dailyPrompt = await prisma.dailyPrompt.findUnique({
-      where: {
-        promptDate: targetDateStr, // string match
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!dailyPrompt) {
-      return NextResponse.json([], { status: 200 }); // no prompt, return empty array
+    // Apply search query if provided
+    if (query) {
+      whereCondition.OR = [
+        { profile: { username: { contains: query, mode: "insensitive" } } },
+        { title: { contains: query, mode: "insensitive" } },
+      ];
     }
 
-    // Fetch pixel arts for this daily prompt
+    // Fetch pixel arts
     const pixelArts = await prisma.pixelArt.findMany({
-      where: {
-        dailyPromptId: dailyPrompt.id,
-        deletedAt: null,
-      },
+      where: whereCondition,
       orderBy: [
         { likesCount: "desc" },
         { commentsCount: "desc" },
@@ -60,9 +60,8 @@ export async function GET(request) {
         createdAt: true,
         likesCount: true,
         commentsCount: true,
-        dailyPromptId:true,
-        deletedAt:true,
-
+        title: true,
+        canCopy: true,
         profile: {
           select: {
             id: true,
@@ -70,7 +69,6 @@ export async function GET(request) {
             avatarConfig: true,
           },
         },
-        // Check if current user liked it
         likes: currentProfileId
           ? {
               where: { profileId: currentProfileId },
@@ -81,6 +79,8 @@ export async function GET(request) {
       },
       take: limit,
     });
+
+    console.log(pixelArts);
 
     const result = pixelArts.map((art) => ({
       id: art.id,
@@ -94,7 +94,7 @@ export async function GET(request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error fetching daily pixel arts:", error);
+    console.error("Error fetching pixel arts:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

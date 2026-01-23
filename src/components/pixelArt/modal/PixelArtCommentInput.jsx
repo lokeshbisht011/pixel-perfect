@@ -5,27 +5,45 @@ import { Smile } from "lucide-react";
 import { useState, useRef } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import { Loader2 } from "lucide-react"; // spinner icon
 
 export default function PixelArtCommentInput({ pixelArtId, onCommentAdded }) {
   const [commentText, setCommentText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [posting, setPosting] = useState(false);
   const inputRef = useRef(null);
 
   const submit = async () => {
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || posting) return;
 
-    const res = await fetch(`/api/pixelArts/${pixelArtId}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: commentText }),
-    });
+    setPosting(true);
 
-    const comment = await res.json();
-    onCommentAdded(comment);
-    setCommentText("");
+    try {
+      const res = await fetch(`/api/pixelArts/${pixelArtId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: commentText }),
+      });
+
+      if (!res.ok) throw new Error("Failed to post comment");
+
+      const comment = await res.json();
+      onCommentAdded(comment);
+      setCommentText("");
+    } catch (err) {
+      console.error(err);
+      // You can add toast here if using sonner/toast
+    } finally {
+      setPosting(false);
+    }
   };
 
-  
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // prevent newline
+      submit();
+    }
+  };
 
   const addEmoji = (emoji) => {
     const input = inputRef.current;
@@ -43,7 +61,10 @@ export default function PixelArtCommentInput({ pixelArtId, onCommentAdded }) {
     // Restore cursor position after emoji
     requestAnimationFrame(() => {
       input.focus();
-      input.setSelectionRange(start + emoji.native.length, start + emoji.native.length);
+      input.setSelectionRange(
+        start + emoji.native.length,
+        start + emoji.native.length
+      );
     });
   };
 
@@ -64,7 +85,7 @@ export default function PixelArtCommentInput({ pixelArtId, onCommentAdded }) {
         <button
           type="button"
           onClick={() => setShowEmoji((p) => !p)}
-          className="p-2 rounded-full hover:bg-muted"
+          className="hidden md:block p-2 rounded-full hover:bg-muted"
         >
           <Smile className="h-5 w-5 text-muted-foreground" />
         </button>
@@ -76,9 +97,17 @@ export default function PixelArtCommentInput({ pixelArtId, onCommentAdded }) {
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="Add a comment..."
           className="flex-1 border text-black rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          onKeyDown={handleKeyPress}
+          disabled={posting}
         />
 
-        <Button size="sm" onClick={submit} className="rounded-full">
+        <Button
+          size="sm"
+          onClick={submit}
+          className="rounded-full flex items-center justify-center gap-1"
+          disabled={posting}
+        >
+          {posting && <Loader2 className="h-4 w-4 animate-spin" />}
           Post
         </Button>
       </div>

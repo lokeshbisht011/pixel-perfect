@@ -49,7 +49,7 @@ const CountdownTimer = () => {
 
   /** YOUR COLOR LOGIC */
   const isLastHour = timeLeft.hours === 0;
-  const countdownColor = !isLastHour
+  const countdownColor = isLastHour
     ? "text-red-500"
     : "text-pixel-neon-green";
 

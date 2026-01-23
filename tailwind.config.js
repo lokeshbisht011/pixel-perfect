@@ -5,6 +5,7 @@ module.exports = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     container: {
@@ -104,6 +105,9 @@ module.exports = {
       "gradient-main": "var(--gradient-main)",
       "gradient-neon": "var(--gradient-neon)",
       "gradient-accent": "var(--gradient-accent)",
+      "tier-1": "var(--tier-1)",
+      "tier-2": "var(--tier-2)",
+      "tier-3": "var(--tier-3)",
     },
   },
   plugins: [require("tailwindcss-animate")],

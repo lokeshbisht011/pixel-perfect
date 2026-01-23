@@ -1,22 +1,33 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import Layout from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from "react";
+import Layout from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import PixelArtCard from "@/components/pixelArt/PixelArtCard";
 
-const fetchPixelArtsByDate = async (date) => {
+const fetchPixelArts = async ({ date, query }) => {
   try {
-    const res = await fetch(`/api/pixelArts?date=${date}`);
+    const params = new URLSearchParams();
+    if (date) params.append("date", date);
+    if (query) params.append("query", query);
+
+    const res = await fetch(`/api/pixelArts?${params.toString()}`);
     if (!res.ok) throw new Error("Failed to fetch pixel arts");
-    return await res.json();
+    return await res.json(); // API now returns a flat array of pixel arts
   } catch (error) {
     console.error(error);
-    return null;
+    return [];
   }
 };
 
@@ -28,37 +39,78 @@ const formatDate = (daysAgo = 0) => {
 
 const PixelArtGallery = () => {
   const { data: session } = useSession();
-  const [pixelArtsByDate, setPixelArtsByDate] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
+
+  const [pixelArts, setPixelArts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      if (session?.user) {
+        try {
+          const response = await fetch("/api/profile/user");
+          if (response.ok) {
+            const data = await response.json();
+            setProfile(data);
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
+      }
+    }
+    fetchProfile();
+  }, [session]);
+
+  const handlePixelArtDeleted = (deletedPixelArtId) => {
+    setPixelArts((prevPixelArt) =>
+      prevPixelArt.filter((pixelArt) => pixelArt.id !== deletedPixelArtId)
+    );
+  };
+
   const observerTarget = useRef(null);
   const daysLoaded = useRef(0);
 
+  // Load pixel arts for infinite scroll
   const loadMorePixelArts = async () => {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore || selectedDate) return;
     setLoading(true);
     const dateToFetch = formatDate(daysLoaded.current);
-    const data = await fetchPixelArtsByDate(dateToFetch);
+    const data = await fetchPixelArts({ date: dateToFetch, query: "" });
 
-    if (data && data.pixelArts?.length > 0) {
-      setPixelArtsByDate(prev => [
-        ...prev,
-        { date: dateToFetch, pixelArts: data.pixelArts, prompt: data.prompt }
-      ]);
+    if (data.length > 0) {
+      setPixelArts((prev) => [...prev, ...data]);
       daysLoaded.current += 1;
-      setLoading(false);
     } else {
       setHasMore(false);
-      setLoading(false);
     }
+    setLoading(false);
   };
 
+  // Initial load on mount
+  useEffect(() => {
+    const initLoad = async () => {
+      setLoading(true);
+      const data = await fetchPixelArts({}); // no date, no query → fetch all
+      if (data.length > 0) {
+        setPixelArts(data);
+        daysLoaded.current += 1;
+      } else {
+        setHasMore(false);
+      }
+      setLoading(false);
+    };
+
+    initLoad();
+  }, []);
+
+  // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
+        if (entries[0].isIntersecting && hasMore && !loading && !selectedDate) {
           loadMorePixelArts();
         }
       },
@@ -69,20 +121,28 @@ const PixelArtGallery = () => {
     return () => {
       if (observerTarget.current) observer.unobserve(observerTarget.current);
     };
-  }, [loading, hasMore]);
+  }, [loading, hasMore, selectedDate]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Implement server-side or client-side search here
+  // Fetch pixel arts by date or search
+  const fetchByFilter = async (date, query) => {
+    setLoading(true);
+    const data = await fetchPixelArts({ date, query });
+    setPixelArts(data || []);
+    setLoading(false);
   };
 
-  const handleSortChange = (value) => setSortBy(value);
-
-  const tags = ["All Prompts", "Fantasy Creature", "Underwater City", "Space Explorer", "Dream Landscape"];
+  // Handle search submit
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchByFilter(
+      selectedDate ? format(selectedDate, "yyyy-MM-dd") : null,
+      searchQuery
+    );
+  };
 
   return (
     <Layout>
-      <div className="container py-8">
+      <div className="container pt-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
@@ -92,70 +152,93 @@ const PixelArtGallery = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto">
-            <form onSubmit={handleSearch} className="relative flex-1">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto items-start sm:items-center">
+            <form
+              onSubmit={handleSearch}
+              className="relative flex-1 w-full sm:w-auto"
+            >
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search by prompt, creator, or tag..."
-                className="pl-8"
+                className="pl-8 w-full sm:w-auto"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search pixel arts"
               />
             </form>
 
-            <Select value={sortBy} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Most Recent</SelectItem>
-                <SelectItem value="popular">Most Popular</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+            {/* Calendar Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {selectedDate
+                    ? format(selectedDate, "MMM dd, yyyy")
+                    : "Select Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => setSelectedDate(date)}
+                  max={new Date()}
+                />
+              </PopoverContent>
+            </Popover>
 
-        {/* Tags / Filters */}
-        <div className="mb-6 flex gap-2 overflow-x-auto py-1">
-          {tags.map((tag) => (
-            <Button key={tag} variant="outline" size="sm" className="rounded-full flex-shrink-0">
-              {tag}
-            </Button>
-          ))}
+            {selectedDate && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setSelectedDate(null);
+                  setPixelArts([]);
+                  setHasMore(true);
+                  daysLoaded.current = 0;
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Pixel Arts */}
         <motion.div
           initial="hidden"
           animate="visible"
-          className="space-y-8"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
           variants={{
             hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+            visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
           }}
         >
-          {pixelArtsByDate.length === 0 && !loading && (
-            <p className="text-center text-muted-foreground">No pixel arts yet.</p>
+          {!loading && pixelArts.length === 0 && (
+            <p className="text-center col-span-full text-muted-foreground">
+              No pixel arts found.
+            </p>
           )}
 
-          {/* {pixelArtsByDate.map((section) => (
-            <PixelArtsByDateSection
-              key={section.date}
-              date={section.date}
-              prompt={section.prompt}
-              pixelArts={section.pixelArts}
-              currentUserProfile={session?.user || null}
+          {pixelArts.map((p) => (
+            <PixelArtCard
+              key={p.id}
+              pixelArt={p}
+              currentUserProfile={profile}
+              onPixelArtDeleted={handlePixelArtDeleted}
             />
-          ))} */}
+          ))}
         </motion.div>
 
         {/* Loading / End */}
-        <div ref={observerTarget} className="py-8 text-center">
-          {loading && <p className="text-muted-foreground">Loading more pixel arts...</p>}
-          {!hasMore && pixelArtsByDate.length > 0 && (
-            <p className="text-muted-foreground">You've reached the end of the gallery.</p>
+        <div ref={observerTarget} className="py-8 text-center col-span-full">
+          {loading && (
+            <p className="text-muted-foreground">Loading pixel arts...</p>
+          )}
+          {!hasMore && !selectedDate && pixelArts.length > 0 && (
+            <p className="text-muted-foreground mt-4">
+              You've reached the end of the gallery.
+            </p>
           )}
         </div>
       </div>
@@ -164,3 +247,13 @@ const PixelArtGallery = () => {
 };
 
 export default PixelArtGallery;
+
+function SectionSkeleton() {
+  return (
+    <div className="grid md:grid-cols-3 gap-6 mt-4">
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
+    </div>
+  );
+}

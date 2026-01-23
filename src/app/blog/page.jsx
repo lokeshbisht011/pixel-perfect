@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BookOpen, Sparkles, Palette, Grid, Clock, AlertTriangle, Calendar, Flame, Wrench, PaletteIcon } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { blogs } from "@/lib/blogData";
 

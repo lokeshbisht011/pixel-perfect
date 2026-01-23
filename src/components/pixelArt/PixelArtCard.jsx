@@ -9,7 +9,6 @@ import Avatar from "boring-avatars";
 import { motion } from "framer-motion";
 import { useToast } from "../ui/use-toast";
 import ShareModal from "../ShareModal";
-// import PixelArtModal from "./PixelArtModal";
 import { useRouter } from "next/navigation";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import PixelArtModal from "./modal/PixelArtModal";
@@ -111,6 +110,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
           description: "Pixel Art deleted successfully!",
           variant: "default",
         });
+        onPixelArtDeleted(pixelArt.id)
         setShowDeleteConfirm(false);
         onClose();
       } else {
@@ -131,7 +131,6 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
       setDeleting(false);
     }
   };
-
 
   return (
     <motion.div
@@ -207,15 +206,17 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
           </Button>
 
           {/* Copy */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-4 w-4"
-            disabled={isCopying}
-            onClick={handleCopyPixelArt}
-          >
-            <Copy className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`} />
-          </Button>
+          {pixelArt.canCopy && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-4 w-4"
+              disabled={isCopying}
+              onClick={handleCopyPixelArt}
+            >
+              <Copy className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`} />
+            </Button>
+          )}
         </div>
 
         {/* Action Buttons (Edit/Delete) - Only shown if it's the current user */}

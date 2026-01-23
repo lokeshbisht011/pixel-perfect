@@ -1,35 +1,63 @@
-'use client'
+"use client";
 
 import { motion } from "framer-motion";
-import { Github, Twitter, Instagram, Mail, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  FaFacebook,
+  FaInstagram,
+  FaTwitter,
+  FaYoutube,
+} from "react-icons/fa";
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   const socialLinks = [
-    { icon: Twitter, href: "#", label: "Twitter", color: "pixel-neon-cyan" },
-    { icon: Instagram, href: "#", label: "Instagram", color: "pixel-neon-pink" },
-    { icon: Github, href: "#", label: "GitHub", color: "pixel-neon-green" },
-    { icon: Mail, href: "#", label: "Email", color: "pixel-neon-yellow" },
+    {
+      icon: FaInstagram,
+      href: "https://www.instagram.com/pixel.art.dailyy",
+      label: "Instagram",
+      color: "pixel-neon-pink",
+    },
+    {
+      icon: FaYoutube,
+      href: "https://www.youtube.com/@Pixel.Art.Dailyy",
+      label: "Youtube",
+      color: "pixel-neon-yellow",
+    },
+    {
+      icon: FaFacebook,
+      href: "#",
+      label: "Facebook",
+      color: "pixel-neon-green",
+    },
+    {
+      icon: FaTwitter,
+      href: "#",
+      label: "Twitter",
+      color: "pixel-neon-cyan",
+    },
   ];
 
   const footerLinks = [
     {
       title: "Community",
       links: [
-        { name: "Gallery", href: "#gallery" },
-        { name: "Leaderboard", href: "#leaderboard" },
+        { name: "Gallery", href: "/gallery" },
+        { name: "Leaderboard", href: "/leaderboard" },
         { name: "Challenges", href: "#challenges" },
         { name: "Discord", href: "#discord" },
-      ]
+      ],
     },
     {
       title: "Create",
       links: [
-        { name: "Pixel Editor", href: "/create" },
+        { name: "PixelArt Editor", href: "/create" },
         { name: "Tutorials", href: "#tutorials" },
         { name: "Tips & Tricks", href: "#tips" },
         { name: "Resources", href: "#resources" },
-      ]
+      ],
     },
     {
       title: "Support",
@@ -38,26 +66,26 @@ const Footer = () => {
         { name: "Contact Us", href: "#contact" },
         { name: "Privacy", href: "#privacy" },
         { name: "Terms", href: "#terms" },
-      ]
-    }
+      ],
+    },
   ];
 
   return (
     <footer className="relative mt-20 py-16 px-6 border-t border-border">
       {/* Decorative pixel elements */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pixel-neon-cyan via-pixel-neon-pink via-pixel-neon-green to-pixel-neon-yellow"></div>
-      
+
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Section */}
-          <motion.div 
+          <motion.div
             className="lg:col-span-2"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <motion.div 
+            <motion.div
               className="flex items-center gap-3 mb-6"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
@@ -71,12 +99,13 @@ const Footer = () => {
                 <span className="text-pixel-neon-green">Daily</span>
               </h3>
             </motion.div>
-            
+
             <p className="text-muted-foreground mb-6 leading-relaxed max-w-md">
-              Join thousands of pixel artists worldwide in daily creative challenges. 
-              Create, share, and discover amazing 8-bit pixel art with our vibrant community.
+              Join thousands of pixel artists worldwide in daily creative
+              challenges. Create, share, and discover amazing 8-bit pixel art
+              with our vibrant community.
             </p>
-            
+
             <div className="flex flex-wrap gap-3">
               {socialLinks.map((social, index) => {
                 const Icon = social.icon;
@@ -84,6 +113,8 @@ const Footer = () => {
                   <motion.a
                     key={social.label}
                     href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`w-12 h-12 bg-${social.color} text-background rounded-sm flex items-center justify-center hover:bg-${social.color}/80 transition-colors`}
                     whileHover={{ scale: 1.1, rotate: 15 }}
                     whileTap={{ scale: 0.95 }}
@@ -113,7 +144,7 @@ const Footer = () => {
                 {section.title}
               </h4>
               <ul className="space-y-3">
-                {section.links.map((link, linkIndex) => (
+                {section.links.map((link) => (
                   <motion.li key={link.name}>
                     <motion.a
                       href={link.href}
@@ -131,7 +162,7 @@ const Footer = () => {
         </div>
 
         {/* Newsletter Section */}
-        <motion.div 
+        <motion.div
           className="mt-12 pt-8 border-t border-border"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -145,12 +176,13 @@ const Footer = () => {
                 <span className="text-pixel-neon-cyan">Updated</span>
               </h4>
               <p className="text-muted-foreground text-sm">
-                Get daily prompts and community highlights delivered to your inbox
+                Get daily prompts and community highlights delivered to your
+                inbox
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <input 
-                type="email" 
+              <input
+                type="email"
                 placeholder="your@email.com"
                 className="px-4 py-2 bg-card border border-border rounded-none font-mono text-sm flex-1 md:w-64 focus:outline-none focus:ring-2 focus:ring-pixel-neon-cyan"
               />
@@ -162,7 +194,7 @@ const Footer = () => {
         </motion.div>
 
         {/* Bottom Section */}
-        <motion.div 
+        <motion.div
           className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -179,9 +211,9 @@ const Footer = () => {
             </motion.div>
             <span>for pixel artists worldwide</span>
           </div>
-          
+
           <div className="text-sm text-muted-foreground font-mono">
-            © 2024 PixelArtDaily. All rights reserved.
+            © {currentYear} PixelArtDaily. All rights reserved.
           </div>
         </motion.div>
 
@@ -190,7 +222,9 @@ const Footer = () => {
           {[...Array(5)].map((_, i) => (
             <motion.div
               key={i}
-              className={`w-2 h-2 ${i % 2 === 0 ? 'bg-pixel-neon-cyan' : 'bg-pixel-neon-pink'}`}
+              className={`w-2 h-2 ${
+                i % 2 === 0 ? "bg-pixel-neon-cyan" : "bg-pixel-neon-pink"
+              }`}
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 2, delay: i * 0.2, repeat: Infinity }}
             />

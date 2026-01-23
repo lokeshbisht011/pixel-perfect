@@ -58,6 +58,9 @@
       hsl(var(--pixel-neon-green)),
       hsl(var(--pixel-neon-yellow))
     );
+    --tier-1: linear-gradient(135deg, #fde68a, #f59e0b);
+    --tier-2: linear-gradient(135deg, #bfdbfe, #3b82f6);
+    --tier-3: linear-gradient(135deg, #e9d5ff, #8b5cf6);
 
     --radius: 0;
 

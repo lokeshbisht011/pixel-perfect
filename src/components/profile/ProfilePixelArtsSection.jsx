@@ -39,7 +39,7 @@ export default function ProfilePixelArtsSection({
     );
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
+    <div className="grid md:grid-cols-3 gap-6 mt-4">
       {pixelArts.map((art) => (
         <PixelArtCard
           key={art.id}
@@ -55,5 +55,11 @@ export default function ProfilePixelArtsSection({
 }
 
 function SectionSkeleton() {
-  return <div className="h-40 animate-pulse rounded-md bg-muted" />;
+  return (
+    <div className="grid md:grid-cols-3 gap-6 mt-4">
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
+    </div>
+  );
 }

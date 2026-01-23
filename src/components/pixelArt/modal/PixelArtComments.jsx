@@ -30,10 +30,6 @@ export default function PixelArtComments({ pixelArt, currentUserProfile }) {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-      {pixelArt.comments.length === 0 && (
-        <p className="text-sm text-muted-foreground">No comments yet</p>
-      )}
-
       <div className="space-y-4">
         {comments.length > 0 ? (
           comments.map((c) => (

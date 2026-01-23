@@ -17,7 +17,7 @@ import PixelArtCard from "./pixelArt/PixelArtCard";
 
 const HorizontalScrollRow = ({
   title,
-  date,
+  dateString,
   limit = 12,
   profile = { profile },
 }) => {
@@ -28,19 +28,17 @@ const HorizontalScrollRow = ({
     const fetchPixelArts = async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `/api/pixelArts?day=${"today"}&limit=${limit}`
-        );
+        const res = await fetch(`/api/pixelArts?date=${dateString}&limit=${limit}`);
         const data = await res.json();
         setPixelArts(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to fetch pixels:", err);
+        console.error("Failed to fetch Pixel Arts:", err);
       } finally {
         setLoading(false);
       }
     };
     fetchPixelArts();
-  }, [date, limit]);
+  }, [dateString, limit]);
 
   const handlePixelArtDeleted = (deletedPixelArtId) => {
     setPixelArts((prevPixelArt) =>
@@ -57,11 +55,8 @@ const HorizontalScrollRow = ({
             {title}
           </span>
         </h3>
-        <Link href={`/gallery?date=${date.toISOString().split("T")[0]}`}>
-          <Button
-            variant="ghost"
-            className="font-mono text-pixel-neon-pink "
-          >
+        <Link href={`/gallery?date=${dateString}`}>
+          <Button variant="ghost" className="font-mono text-pixel-neon-pink ">
             <span className="text-xs">VIEW ALL</span>
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
@@ -117,6 +112,9 @@ const PixelArtGallery = ({ profile }) => {
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
+  const todayStr = today.toISOString().split("T")[0];
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+
   return (
     <section id="gallery" className="py-12 md:py-20 px-4 md:px-6 bg-background">
       <div className="max-w-7xl mx-auto">
@@ -137,15 +135,15 @@ const PixelArtGallery = ({ profile }) => {
 
         {/* Today's Section */}
         <HorizontalScrollRow
-          title="Today's Pixels"
-          date={today}
+          title="Today's Arts"
+          dateString={todayStr}
           profile={profile}
         />
 
         {/* Yesterday's Section */}
         <HorizontalScrollRow
           title="Yesterday's Masterpieces"
-          date={yesterday}
+          dateString={yesterdayStr}
           profile={profile}
         />
 
