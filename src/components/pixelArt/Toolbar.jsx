@@ -1,10 +1,20 @@
 import React from "react";
 import { Button } from "../ui/button";
 import { Slider } from "@/components/ui/slider";
-import { RotateCcw, History, X, Grid, RotateCw, Trash2 } from "lucide-react";
+import {
+  RotateCcw,
+  History,
+  X,
+  Grid,
+  RotateCw,
+  Trash2,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import ColorPicker from "../ColorPicker";
 import { Input } from "../ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64, 96, 128];
 const ZOOM_LEVELS = [1, 2, 3, 4, 6, 8];
@@ -26,6 +36,8 @@ const Toolbar = ({
   handleZoomChange,
   activeColor,
   setActiveColor,
+  isEyedropperActive,
+  setIsEyedropperActive,
 }) => {
   return (
     <>
@@ -51,7 +63,10 @@ const Toolbar = ({
                 key={tool.id}
                 size="sm"
                 variant={activeTool === tool.id ? "neon" : "pixel"}
-                onClick={() => onToolChange(tool.id)}
+                onClick={() => {
+                  onToolChange(tool.id);
+                  setIsEyedropperActive(false);
+                }}
                 className="justify-start gap-2"
               >
                 <tool.icon className="w-4 h-4" />
@@ -65,6 +80,11 @@ const Toolbar = ({
         <ColorPicker
           activeColor={activeColor}
           setActiveColor={setActiveColor}
+          onEyedropper={() => {
+            setIsEyedropperActive(true);
+            onToolChange("brush");
+          }}
+          eyedropperActive={isEyedropperActive}
         />
 
         {/* History */}
@@ -95,43 +115,62 @@ const Toolbar = ({
         </div>
 
         {/* Canvas Controls */}
-        <div className="pixel-card-single bg-card p-4 space-y-4">
+        <div className="pixel-card-single bg-card p-4 space-y-2">
           <h3 className="font-bold">Canvas</h3>
 
-          {/* Zoom */}
-          <div>
-            <p className="text-sm mb-2">Zoom: {zoom}×</p>
-            <Slider
-              value={[zoom]}
-              min={1}
-              max={8}
-              step={0.25}
-              onValueChange={(v) => handleZoomChange(v[0])}
-            />
-          </div>
+          <div className="flex items-center gap-2">
+            {/* Zoom */}
+            <div className="flex items-center justify-between h-10 px-2 rounded-md bg-muted flex-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => handleZoomChange(Math.max(1, zoom - 1))}
+              >
+                <ZoomOut className="w-4 h-4" />
+              </Button>
 
-          {/* Grid Size */}
-          <div>
-            <p className="text-sm mb-2">
-              Size: {sliderGridSize} × {sliderGridSize}
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {GRID_SIZES.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSliderGridSize(size)}
-                  className={`
-            rounded-md py-2 text-xs font-medium
-            ${
-              sliderGridSize === size
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted hover:bg-muted/70"
-            }
-          `}
-                >
-                  {size}
-                </button>
-              ))}
+              <span className="text-xs font-mono text-muted-foreground">
+                {zoom}×
+              </span>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => handleZoomChange(Math.min(8, zoom + 1))}
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Grid Size */}
+            <div className="h-10 flex-1">
+              <Select
+                value={String(sliderGridSize)}
+                onValueChange={(v) => setSliderGridSize(Number(v))}
+              >
+                <SelectTrigger className="h-10 bg-muted font-mono text-xs">
+                  <div className="flex items-center gap-2">
+                    <Grid className="w-4 h-4 text-muted-foreground" />
+                    <span>
+                      {sliderGridSize} × {sliderGridSize}
+                    </span>
+                  </div>
+                </SelectTrigger>
+
+                <SelectContent align="end">
+                  {GRID_SIZES.map((size) => (
+                    <SelectItem
+                      key={size}
+                      value={String(size)}
+                      className="font-mono text-xs"
+                    >
+                      {size} × {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -139,7 +178,6 @@ const Toolbar = ({
 
       {/* MOBILE TOOLBAR */}
       <div className="lg:hidden space-y-2">
-        <Separator />
         <div className="bg-card p-3 space-y-4">
           {/* Tools Row */}
           <div className="flex justify-between items-center">
@@ -182,47 +220,60 @@ const Toolbar = ({
             </div>
           </div>
 
-          {/* Zoom */}
-          <div>
-            <p className="text-xs mb-2 text-muted-foreground">Zoom</p>
-            <div className="flex gap-2">
-              {ZOOM_LEVELS.map((z) => (
-                <button
-                  key={z}
-                  onClick={() => handleZoomChange(z)}
-                  className={`
-              px-3 py-1 rounded-md text-xs
-              ${zoom === z ? "bg-primary text-primary-foreground" : "bg-muted"}
-            `}
-                >
-                  {z}×
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Zoom + Canvas Size Row */}
+          <div className="flex items-center gap-2">
+            {/* Zoom */}
+            <div className="flex items-center justify-between h-10 px-2 rounded-md bg-muted flex-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => handleZoomChange(Math.max(1, zoom - 1))}
+              >
+                <ZoomOut className="w-4 h-4" />
+              </Button>
 
-          {/* Grid Size */}
-          <div>
-            <p className="text-xs mb-2 text-muted-foreground">
-              Grid: {sliderGridSize} × {sliderGridSize}
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {GRID_SIZES.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSliderGridSize(size)}
-                  className={`
-              py-2 rounded-md text-xs
-              ${
-                sliderGridSize === size
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
-              }
-            `}
-                >
-                  {size}
-                </button>
-              ))}
+              <span className="text-xs font-mono text-muted-foreground">
+                {zoom}×
+              </span>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => handleZoomChange(Math.min(8, zoom + 1))}
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Grid Size */}
+            <div className="h-10 flex-1">
+              <Select
+                value={String(sliderGridSize)}
+                onValueChange={(v) => setSliderGridSize(Number(v))}
+              >
+                <SelectTrigger className="h-10 bg-muted font-mono text-xs">
+                  <div className="flex items-center gap-2">
+                    <Grid className="w-4 h-4 text-muted-foreground" />
+                    <span>
+                      {sliderGridSize} × {sliderGridSize}
+                    </span>
+                  </div>
+                </SelectTrigger>
+
+                <SelectContent align="end">
+                  {GRID_SIZES.map((size) => (
+                    <SelectItem
+                      key={size}
+                      value={String(size)}
+                      className="font-mono text-xs"
+                    >
+                      {size} × {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -230,7 +281,8 @@ const Toolbar = ({
           <ColorPicker
             activeColor={activeColor}
             setActiveColor={setActiveColor}
-            compact
+            onEyedropper={() => setIsEyedropperActive((prev) => !prev)}
+            eyedropperActive={isEyedropperActive}
           />
         </div>
       </div>

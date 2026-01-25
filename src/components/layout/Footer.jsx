@@ -27,16 +27,16 @@ const Footer = () => {
       color: "pixel-neon-yellow",
     },
     {
-      icon: FaFacebook,
-      href: "#",
-      label: "Facebook",
-      color: "pixel-neon-green",
-    },
-    {
       icon: FaTwitter,
-      href: "#",
+      href: "https://x.com/pixelart_daily",
       label: "Twitter",
       color: "pixel-neon-cyan",
+    },
+    {
+      icon: FaFacebook,
+      href: "https://www.facebook.com/profile.php?id=61586891890294",
+      label: "Facebook",
+      color: "pixel-neon-green",
     },
   ];
 

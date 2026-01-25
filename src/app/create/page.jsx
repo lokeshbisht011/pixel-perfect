@@ -27,6 +27,10 @@ const itemVariants = {
   visible: { y: 0, opacity: 1 },
 };
 
+const clearDraft = () => {
+  localStorage.removeItem(STORAGE_KEY);
+};
+
 const CreatePixelArt = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -150,7 +154,9 @@ const CreatePixelArt = () => {
           description: dailyPromptId
             ? "Your art is live in today's gallery."
             : "Saved to your profile.",
-        });        
+        }); 
+
+        clearDraft()
 
         if (!pixelArtId || visibilityStatus === "PUBLIC") {
           await syncBadges();

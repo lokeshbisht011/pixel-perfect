@@ -4,13 +4,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Brush, Eraser, Move, PaintBucket } from "lucide-react";
+import { Brush, Eraser, Move, PaintBucket, Pipette } from "lucide-react";
 import { toast } from "../ui/use-toast";
 import Toolbar from "./Toolbar";
 import Settings from "./Settings";
-import { VISIBILITY_STATUS } from "@/lib/utils";
-
-const STORAGE_KEY = "pixel-art-draft";
+import { STORAGE_KEY, VISIBILITY_STATUS } from "@/lib/utils";
 
 const saveDraft = (data) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -19,10 +17,6 @@ const saveDraft = (data) => {
 const loadDraft = () => {
   const raw = localStorage.getItem(STORAGE_KEY);
   return raw ? JSON.parse(raw) : null;
-};
-
-const clearDraft = () => {
-  localStorage.removeItem(STORAGE_KEY);
 };
 
 const MAX_GRID_SIZE = 128;
@@ -45,6 +39,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isEyedropperActive, setIsEyedropperActive] = useState(false);
 
   const panStartRef = useRef({ x: 0, y: 0 });
   const panOriginRef = useRef({ x: 0, y: 0 });
@@ -107,7 +102,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
   const createEmptyGrid = useCallback((size) => {
     return Array.from({ length: size }, () =>
-      Array.from({ length: size }, () => "#ffffff")
+      Array.from({ length: size }, () => null)
     );
   }, []);
 
@@ -215,9 +210,21 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
   const handlePointerDown = (e, row, col) => {
     e.preventDefault();
-    setIsDrawing(true);
-
     e.currentTarget.setPointerCapture(e.pointerId);
+
+    if (isEyedropperActive) {
+      let color = fullGrid[row][col];
+      if (!color) {
+        color = (row + col) % 2 === 0 ? "#f0f0f0" : "#ffffff";
+      }
+
+      setActiveColor(color);
+      activeColorRef.current = color;
+      setIsEyedropperActive(false);
+      return;
+    }
+
+    setIsDrawing(true);
 
     if (activeTool === "fill") {
       handleFill(row, col);
@@ -225,26 +232,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       handlePixelClick(row, col);
     }
   };
-
-  const clampPan = useCallback(
-    (x, y) => {
-      if (!containerRef.current || !gridRef.current) {
-        return { x, y };
-      }
-
-      const container = containerRef.current.getBoundingClientRect();
-      const gridSizePx = gridRef.current.offsetWidth * zoom;
-
-      const maxX = Math.max(0, (gridSizePx - container.width) / 2);
-      const maxY = Math.max(0, (gridSizePx - container.height) / 2);
-
-      return {
-        x: Math.min(maxX, Math.max(-maxX, x)),
-        y: Math.min(maxY, Math.max(-maxY, y)),
-      };
-    },
-    [zoom]
-  );
 
   const getSnappedPan = useCallback(
     (x, y, nextZoom = zoom) => {
@@ -319,8 +306,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     const rect = grid.getBoundingClientRect();
 
-    const x = (e.clientX - rect.left)
-    const y = (e.clientY - rect.top)
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     const col = Math.floor((x / rect.width) * gridSize);
     const row = Math.floor((y / rect.height) * gridSize);
@@ -331,11 +318,13 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   };
 
   const handlePointerUp = (e) => {
-    if (!isDrawing) return;
-
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {}
+
+    if (isEyedropperActive) return;
+
+    if (!isDrawing) return;
 
     setIsDrawing(false);
     saveCanvasState({ grid: fullGrid, gridSize: fullGrid.length });
@@ -376,35 +365,35 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   };
 
   const handleClear = () => {
-    const newGrid = createEmptyGrid(sliderGridSize);
+    const newGrid = createEmptyGrid(MAX_GRID_SIZE);
     setFullGrid(newGrid);
     saveCanvasState({ grid: newGrid, gridSize: sliderGridSize }, true);
   };
 
   const handleDownload = () => {
+    if (!fullGrid || fullGrid.length === 0) return;
+
     const pixelSize = 10;
+    const size = sliderGridSize; // only use the visible grid size
     const canvas = document.createElement("canvas");
-    canvas.width = fullGrid.length * pixelSize;
-    canvas.height = fullGrid.length * pixelSize;
+    canvas.width = size * pixelSize;
+    canvas.height = size * pixelSize;
     const ctx = canvas.getContext("2d");
 
-    fullGrid.forEach((row, rowIndex) => {
-      row.forEach((color, colIndex) => {
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        const color = fullGrid[row][col] ?? "#ffffff"; // fallback for null
         ctx.fillStyle = color;
-        ctx.fillRect(
-          colIndex * pixelSize,
-          rowIndex * pixelSize,
-          pixelSize,
-          pixelSize
-        );
-      });
-    });
+        ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
+      }
+    }
 
     const dataURL = canvas.toDataURL("image/png");
     const link = document.createElement("a");
     link.href = dataURL;
     link.download = `pixel-art-${Date.now()}.png`;
     link.click();
+
     toast({
       title: "Pixel Art Downloaded",
       description: "Your Pixel Art has been downloaded.",
@@ -490,10 +479,94 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     { id: "pan", icon: Move, label: "Pan" },
   ];
 
+  // update cursor based on tool
   useEffect(() => {
     if (!gridRef.current) return;
-    gridRef.current.style.cursor = activeTool === "pan" ? "grab" : "crosshair";
-  }, [activeTool]);
+
+    const el = gridRef.current;
+
+    if (isEyedropperActive) {
+      el.style.cursor = "copy";
+      return;
+    }
+
+    switch (activeTool) {
+      case "pan":
+        el.style.cursor = isPanning ? "grabbing" : "grab";
+        break;
+
+      case "eraser":
+        el.style.cursor = "not-allowed";
+        break;
+
+      case "fill":
+        el.style.cursor = "cell";
+        break;
+
+      case "brush":
+      default:
+        el.style.cursor = "crosshair";
+        break;
+    }
+  }, [isEyedropperActive, activeTool]);
+
+  // keyboard shortcuts
+  useEffect(() => {
+    const handler = (e) => {
+      const tag = e.target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case "i":
+          e.preventDefault();
+          if (isEyedropperActive) {
+            setIsEyedropperActive(false);
+            setActiveTool("brush");
+          } else {
+            setIsEyedropperActive(true);
+          }
+          break;
+
+        case "escape":
+          e.preventDefault();
+          setIsEyedropperActive(false);
+          setActiveTool("brush");
+          break;
+
+        case "b":
+          e.preventDefault();
+          setIsEyedropperActive(false);
+          setActiveTool("brush");
+          break;
+
+        case "f":
+          e.preventDefault();
+          setIsEyedropperActive(false);
+          setActiveTool("fill");
+          break;
+
+        case "e":
+          e.preventDefault();
+          setIsEyedropperActive(false);
+          setActiveTool("eraser");
+          break;
+
+        case "p":
+          e.preventDefault();
+          setIsEyedropperActive(false);
+          setActiveTool("pan");
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -556,8 +629,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                     row.map((color, colIndex) => (
                       <div
                         key={`${rowIndex}-${colIndex}`}
-                        className="pixel touch-none select-none"
-                        style={{ backgroundColor: color }}
+                        className="touch-none select-none"
+                        style={{
+                          backgroundColor:
+                            color ??
+                            ((rowIndex + colIndex) % 2 === 0
+                              ? "#f0f0f0"
+                              : "#ffffff"),
+                        }}
                         onPointerDown={
                           activeTool !== "pan"
                             ? (e) => handlePointerDown(e, rowIndex, colIndex)
@@ -573,7 +652,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
           {/* Right Panel (Scrollable) */}
           <div className="flex flex-col h-full max-h-[600px] overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div className="flex-1 overflow-y-auto pr-1">
               <Toolbar
                 tools={tools}
                 title={title}
@@ -591,6 +670,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                 handleZoomChange={handleZoomChange}
                 activeColor={activeColor}
                 setActiveColor={setActiveColor}
+                isEyedropperActive={isEyedropperActive}
+                setIsEyedropperActive={setIsEyedropperActive}
               />
 
               <Separator />

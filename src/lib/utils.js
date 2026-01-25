@@ -21,3 +21,5 @@ export const VISIBILITY_STATUS = Object.freeze({
   PRIVATE: "PRIVATE",
   UNLISTED: "UNLISTED",
 });
+
+export const STORAGE_KEY = "pixel-art-draft";
