@@ -21,6 +21,7 @@ export async function GET(req, { params }) {
       canCopy: true,
       visibilityStatus: true,
       contentRating: true,
+      title: true,
       profile: {
         select: {
           id: true,

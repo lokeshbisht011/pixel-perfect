@@ -1,171 +1,61 @@
-"use client";
-
-import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Share2, Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import Image from "next/image";
-import Link from "next/link";
-import BoringAvatar from "boring-avatars";
-import { Button } from "@/components/ui/button";
-import { useSession } from "next-auth/react";
 import Layout from "@/components/layout/Layout";
-import { useToast } from "@/hooks/use-toast";
+import PixelArtClient from "@/components/pixelArt/PixelArtClient";
 
-import quotes from "@/lib/quotes.json";
+export async function generateMetadata({ searchParams }) {
+  const id = searchParams?.id;
 
-const PixelArtContent = () => {
-  const searchParams = useSearchParams();
-  const pixelArtId = searchParams.get("id");
-  const { data: session } = useSession();
-  const { toast } = useToast();
+  if (!id) return { title: "Pixel Art Daily" };
 
-  const [pixelArt, setPixelArt] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [quote, setQuote] = useState(null);
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/pixelArts/${id}`
+    );
+    if (!res.ok) throw new Error("Failed to fetch pixel art");
 
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * quotes.length);
-    setQuote(quotes[randomIndex]);
+    const pixelArt = await res.json();
 
-    if (!pixelArtId) {
-      setError(true);
-      setLoading(false);
-      return;
-    }
+    const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/pixelArt?id=${pixelArt.id}`;
+    const pageTitle = pixelArt.title || "Pixel Art Daily";
+    const pageDesc = `Check out this pixel art by ${pixelArt.profile.username}!`;
+    const pageImage = pixelArt.imageUrl;
 
-    const fetchPixelArt = async () => {
-      try {
-        const response = await fetch(`/api/pixelArts/${pixelArtId}`);
-        if (!response.ok) {
-          setError(true);
-          throw new Error("Pixel Art not found");
-        }
-        const data = await response.json();
-        setPixelArt(data);
-      } catch (err) {
-        console.error(err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+    return {
+      title: pageTitle,
+      description: pageDesc,
+      openGraph: {
+        title: pageTitle,
+        description: pageDesc,
+        type: "website",
+        url: pageUrl,
+        images: [
+          {
+            url: pageImage,
+            width: 800,
+            height: 800,
+            alt: pageTitle,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: pageTitle,
+        description: pageDesc,
+        images: [pageImage],
+      },
     };
-    fetchPixelArt();
-  }, [pixelArtId]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <div className="mt-4 text-center max-w-sm px-4">
-          {quote ? (
-            <>
-              <span className="font-semibold italic">"{quote.quote}"</span>
-              <span className="block mt-2 text-sm font-medium"> - {quote.author}</span>
-            </>
-          ) : (
-            "Loading pixel art..."
-          )}
-        </div>
-      </div>
-    );
+  } catch (err) {
+    console.error(err);
+    return { title: "Pixel Art Daily" };
   }
-  
-  if (error || !pixelArt) {
-    return (
-      <div className="container py-8 text-center text-destructive">
-        <p>Error: Pixel Art not found.</p>
-      </div>
-    );
-  }
-  
-  const likes = pixelArt.likesCount || 0;
-  const comments = pixelArt.comments?.length || 0;
-  
-  return (
-    <div className="container py-8 max-w-2xl">
-      <Card>
-        <div className="relative aspect-square overflow-hidden rounded-t-lg">
-          <Image
-            src={pixelArt.imageUrl}
-            alt={pixelArt.title || `Pixel Art by ${pixelArt.profile.username}`}
-            fill
-            className="object-contain bg-gray-100"
-          />
-        </div>
-        <CardContent className="p-6">
-          <h1 className="text-2xl font-bold mb-2">{pixelArt.title}</h1>
-          <div className="flex items-center gap-3 mb-4">
-            <Link href={`/${pixelArt.profile.username}`}>
-              {pixelArt.profile?.avatarConfig ? (
-                <BoringAvatar
-                  size={36}
-                  name={pixelArt.profile.avatarConfig.seed}
-                  variant={pixelArt.profile.avatarConfig.variant}
-                  colors={pixelArt.profile.avatarConfig.colors}
-                />
-              ) : (
-                <Avatar className="h-9 w-9">
-                  <AvatarImage alt={pixelArt.profile.username || "User"} />
-                  <AvatarFallback>
-                    {pixelArt.profile.username?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </Link>
-            <div className="flex flex-col">
-              <Link
-                href={`/${pixelArt.profile.username}`}
-                className="font-medium text-sm hover:underline"
-              >
-                {pixelArt.profile.username}
-              </Link>
-              <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(pixelArt.createdAt), {
-                  addSuffix: true,
-                })}
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex gap-4">
-              <Button variant="ghost" className="flex items-center gap-1">
-                <Heart className="h-4 w-4" />
-                <span>{likes} Likes</span>
-              </Button>
-              <Button variant="ghost" className="flex items-center gap-1">
-                <MessageCircle className="h-4 w-4" />
-                <span>{comments} Comments</span>
-              </Button>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+}
 
-const Page = () => {
-  const { data: session } = useSession();
+export default function PixelArtPage({ searchParams }) {
+  const id = searchParams?.id;
 
   return (
-    <Layout user={session?.user}>
-      <Suspense fallback={
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      }>
-        <PixelArtContent />
-      </Suspense>
+    <Layout>
+      {/* Client component handles fetching, comments, likes, modals */}
+      <PixelArtClient pixelArtId={id} />
     </Layout>
   );
-};
-
-export default Page;
+}

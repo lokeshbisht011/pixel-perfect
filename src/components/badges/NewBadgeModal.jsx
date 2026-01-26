@@ -33,9 +33,11 @@ const NewBadgeModal = ({ isOpen, onClose, badge }) => {
   if (!badge) return null;
 
   const shareData = {
-    title: "Badge Unlocked 🎉",
-    text: `I just earned the "${badge.name}" badge on PixelArtDaily!`,
-    url: typeof window !== "undefined" ? window.location.href : "",
+    title: `🎨 Badge Unlocked on PixelArtDaily!`,
+    text: badge?.name
+      ? `I just earned the "${badge.name}" badge on PixelArtDaily! Check it out!`
+      : `I just unlocked a badge on PixelArtDaily!`,
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}`
   };
 
   return (
@@ -72,9 +74,7 @@ const NewBadgeModal = ({ isOpen, onClose, badge }) => {
                 </motion.div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold">
-                  Badge Unlocked!
-                </h3>
+                <h3 className="text-xl font-bold">Badge Unlocked!</h3>
 
                 {/* Badge info */}
                 <div className="mt-3 rounded-lg bg-muted p-4">

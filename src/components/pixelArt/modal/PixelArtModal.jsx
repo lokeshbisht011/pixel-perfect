@@ -11,7 +11,7 @@ import PixelArtCommentInput from "./PixelArtCommentInput";
 import ModalSkeleton from "./ModalSkeleton";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
-const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
+const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile, isOwner }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -62,6 +62,7 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
+        onClick={(e) => e.stopPropagation()}
         className="
     p-0
     w-[calc(100vw-2rem)]
@@ -77,17 +78,18 @@ const PixelArtModal = ({ pixelArt, isOpen, onClose, currentUserProfile }) => {
         ) : (
           <div className="flex flex-col md:flex-row h-[90vh] md:h-[600px]">
             <PixelArtImage pixelArt={data} />
-
-            <div className="flex flex-col flex-1 border-l min-h-0">
+            <div className="flex flex-col flex-1 min-h-0 bg-card rounded-b-xl md:rounded-tr-xl md:rounded-br-xl md:rounded-b-none overflow-hidden">
               <PixelArtHeader pixelArt={data} />
               <PixelArtComments
                 pixelArt={data}
                 currentUserProfile={currentUserProfile}
+                isOwner={isOwner}
               />
               <PixelArtActions
                 pixelArt={data}
                 currentUserProfile={currentUserProfile}
                 onDelete={() => setShowDeleteConfirm(true)}
+                isOwner={isOwner}
               />
               <PixelArtCommentInput
                 pixelArtId={data.id}

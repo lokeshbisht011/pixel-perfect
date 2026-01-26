@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageSquare, Share2, Edit, Trash2, Copy } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import Avatar from "boring-avatars";
 import { motion } from "framer-motion";
 import { useToast } from "../ui/use-toast";
 import ShareModal from "../ShareModal";
 import { useRouter } from "next/navigation";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import PixelArtModal from "./modal/PixelArtModal";
+import BoringAvatar from "boring-avatars";
 
 const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   const { toast } = useToast();
@@ -22,12 +22,12 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    setIsCurrentUser(currentUserProfile?.id === pixelArt.profile.id);
+    setIsOwner(currentUserProfile?.id === pixelArt.profile.id);
   }, [currentUserProfile, pixelArt]);
 
   const handleLike = async (e) => {
@@ -54,8 +54,12 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   };
 
   const shareData = {
-    title: `Check out this pixel art by ${pixelArt.profile.username}!`,
-    text: `"${pixelArt.title || "Untitled"}" by ${pixelArt.profile.username}`,
+    title: isOwner
+      ? `Check out my pixel art!`
+      : `Check out this pixel art by ${pixelArt.profile.username}!`,
+    text: isOwner
+      ? `"${pixelArt.title || "Untitled"}" — created by me on PixelArtDaily!`
+      : `"${pixelArt.title || "Untitled"}" by ${pixelArt.profile.username}`,
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/pixelArt?id=${pixelArt.id}`,
   };
 
@@ -110,9 +114,9 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
           description: "Pixel Art deleted successfully!",
           variant: "default",
         });
-        onPixelArtDeleted(pixelArt.id)
+        onPixelArtDeleted(pixelArt.id);
         setShowDeleteConfirm(false);
-        onClose();
+        setIsModalOpen(false);
       } else {
         toast({
           title: "",
@@ -133,126 +137,130 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   };
 
   return (
-    <motion.div
-      className="pixel-card-single group w-full snap-start cursor-pointer"
-      whileHover={{ y: -5 }}
-      onClick={() => setIsModalOpen(true)}
-    >
-      {/* Image Container - Matches your design exactly */}
-      <div className="aspect-square mb-4 relative overflow-hidden bg-white border-2 border-border">
-        <img
-          src={pixelArt.imageUrl}
-          alt={pixelArt.title}
-          className="w-full h-full object-contain image-pixelated p-2"
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-      </div>
-
-      {/* Title */}
-      <h4 className="font-bold text-lg mb-2 font-mono truncate">
-        {pixelArt.title || "UNTITLED"}
-      </h4>
-
-      {/* Profile Section */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-        <Link
-          href={`/${pixelArt.profile.username}`}
-          className="flex items-center gap-2 hover:text-primary transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Avatar
-            size={20}
-            name={pixelArt.profile.username}
-            variant={pixelArt.profile.avatarConfig?.variant || "beam"}
-            colors={pixelArt.profile.avatarConfig?.colors}
+    <>
+      <motion.div
+        className="pixel-card-single group w-full snap-start cursor-pointer"
+        whileHover={{ y: -5 }}
+        onClick={() => setIsModalOpen(true)}
+      >
+        {/* Image Container - Matches your design exactly */}
+        <div className="aspect-square mb-4 relative overflow-hidden bg-white border-2 border-border">
+          <img
+            src={pixelArt.imageUrl}
+            alt={pixelArt.title}
+            className="w-full h-full object-contain image-pixelated p-2"
           />
-          <span className="font-mono">{pixelArt.profile.username}</span>
-        </Link>
-        <span className="text-[10px] font-mono uppercase">
-          {formatDistanceToNow(new Date(pixelArt.createdAt), {
-            addSuffix: true,
-          })}
-        </span>
-      </div>
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+        </div>
 
-      {/* Bottom Bar: Stats + Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 text-sm font-mono">
-          <div
-            onClick={handleLike}
-            className={`flex items-center gap-1 cursor-pointer transition-colors ${
-              liked ? "text-pixel-neon-pink" : "hover:text-pixel-neon-pink"
-            }`}
+        {/* Title */}
+        <h4 className="font-bold text-lg mb-2 font-mono truncate">
+          {pixelArt.title || "UNTITLED"}
+        </h4>
+
+        {/* Profile Section */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+          <Link
+            href={`/${pixelArt.profile.username}`}
+            className="flex items-center gap-2 hover:text-primary transition-colors"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
-            <span>{likes}</span>
-          </div>
-          <div className="flex items-center gap-1 text-pixel-neon-cyan">
-            <MessageSquare className="w-4 h-4" />
-            <span>{pixelArt.commentsCount}</span>
-          </div>
+            <BoringAvatar
+              size={32}
+              name={pixelArt.profile.avatarConfig.seed}
+              variant={pixelArt.profile.avatarConfig.variant}
+              colors={pixelArt.profile.avatarConfig.colors}
+            />
+            <span className="font-mono">{pixelArt.profile.username}</span>
+          </Link>
+          <span className="text-[10px] font-mono uppercase">
+            {formatDistanceToNow(new Date(pixelArt.createdAt), {
+              addSuffix: true,
+            })}
+          </span>
+        </div>
 
-          {/* Share */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-4 w-4"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsShareModalOpen(true);
-            }}
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
+        {/* Bottom Bar: Stats + Actions */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-sm font-mono">
+            <div
+              onClick={handleLike}
+              className={`flex items-center gap-1 cursor-pointer transition-colors ${
+                liked ? "text-pixel-neon-pink" : "hover:text-pixel-neon-pink"
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+              <span>{likes}</span>
+            </div>
+            <div className="flex items-center gap-1 text-pixel-neon-cyan">
+              <MessageSquare className="w-4 h-4" />
+              <span>{pixelArt.commentsCount}</span>
+            </div>
 
-          {/* Copy */}
-          {pixelArt.canCopy && (
+            {/* Share */}
             <Button
               variant="ghost"
               size="icon"
               className="h-4 w-4"
-              disabled={isCopying}
-              onClick={handleCopyPixelArt}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsShareModalOpen(true);
+              }}
             >
-              <Copy className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`} />
+              <Share2 className="h-4 w-4" />
             </Button>
-          )}
-        </div>
 
-        {/* Action Buttons (Edit/Delete) - Only shown if it's the current user */}
-        {isCurrentUser && (
-          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-            <Link href={`/edit?id=${pixelArt.id}`}>
+            {/* Copy */}
+            {pixelArt.canCopy && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 hover:text-pixel-neon-cyan"
-                onClick={(e) => e.stopPropagation()}
+                className="h-4 w-4"
+                disabled={isCopying}
+                onClick={handleCopyPixelArt}
               >
-                <Edit className="h-4 w-4" />
+                <Copy
+                  className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`}
+                />
               </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 hover:text-red-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDeleteConfirm(true);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            )}
           </div>
-        )}
-      </div>
 
+          {/* Action Buttons (Edit/Delete) - Only shown if it's the current user */}
+          {isOwner && (
+            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+              <Link href={`/edit?id=${pixelArt.id}`}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 hover:text-pixel-neon-cyan"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteConfirm(true);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </motion.div>
       {/* Components that don't render visually in the flow */}
       <PixelArtModal
         pixelArt={pixelArt}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={setIsModalOpen}
         currentUserProfile={currentUserProfile}
+        isOwner={isOwner}
       />
       <ConfirmDialog
         open={showDeleteConfirm}
@@ -268,7 +276,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
         onClose={() => setIsShareModalOpen(false)}
         shareData={shareData}
       />
-    </motion.div>
+    </>
   );
 };
 

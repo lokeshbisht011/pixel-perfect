@@ -5,7 +5,7 @@ import BoringAvatar from "boring-avatars";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default function PixelArtComments({ pixelArt, currentUserProfile }) {
+export default function PixelArtComments({ pixelArt, currentUserProfile, isOwner }) {
   const [comments, setComments] = useState([]);
 
   useEffect(() => {
@@ -61,7 +61,8 @@ export default function PixelArtComments({ pixelArt, currentUserProfile }) {
                   })}
                 </span>
               </div>
-              {currentUserProfile?.id === c.profileId && (
+              {isOwner}
+              {((currentUserProfile?.id === c.profileId) || isOwner) && (
                 <Button
                   variant="ghost"
                   size="sm"

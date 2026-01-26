@@ -17,6 +17,7 @@ export default function PixelArtActions({
   pixelArt,
   currentUserProfile,
   onDelete,
+  isOwner
 }) {
   const [liked, setLiked] = useState(
     pixelArt.likes.some((l) => l.profileId === currentUserProfile?.id)
@@ -28,8 +29,12 @@ export default function PixelArtActions({
   const [isCopying, setIsCopying] = useState(false);
 
   const shareData = {
-    title: `Check out this pixel art by ${pixelArt.profile.username}!`,
-    text: `"${pixelArt.title || "Untitled"}" by ${pixelArt.profile.username}`,
+    title: isOwner
+      ? `Check out my pixel art!`
+      : `Check out this pixel art by ${pixelArt.profile.username}!`,
+    text: isOwner
+      ? `"${pixelArt.title || "Untitled"}" — created by me on PixelArtDaily!`
+      : `"${pixelArt.title || "Untitled"}" by ${pixelArt.profile.username}`,
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/pixelArt?id=${pixelArt.id}`,
   };
 
