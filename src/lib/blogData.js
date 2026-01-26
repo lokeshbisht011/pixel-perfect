@@ -1,4 +1,4 @@
-import { BookOpen, Sparkles, Palette, Grid, Clock, AlertTriangle, Calendar, Flame, Wrench, PaletteIcon } from "lucide-react";
+import { BookOpen, Sparkles, Palette, Grid, Clock, AlertTriangle, Calendar, Flame, Wrench, PaletteIcon, Gamepad2, Shapes, Search, CalendarClock, TrendingUp, Play, Grid3X3 } from "lucide-react";
 
 export const blogs = [
   {
@@ -84,4 +84,76 @@ export const blogs = [
     icon: Grid,
     color: "text-pixel-neon-green",
   },
+
+  
+  {
+    slug: "pixel-art-canvas-sizes-explained",
+    title: "Pixel Art Canvas Sizes Explained (8x8, 16x16, 32x32, 64x64)",
+    description: "Learn which pixel art grid size to use and when, with clear examples for beginners.",
+    icon: Grid3X3,
+    color: "text-pixel-neon-purple",
+  },
+  {
+    slug: "start-pixel-art-with-no-drawing-experience",
+    title: "How to Start Pixel Art With No Drawing Experience",
+    description: "A beginner-friendly guide to starting pixel art even if you've never drawn before.",
+    icon: Sparkles,
+    color: "text-pixel-neon-green",
+  },
+  {
+    slug: "pixel-art-animation-basics-for-beginners",
+    title: "Pixel Art Animation Basics for Complete Beginners",
+    description: "Understand frames, timing, and simple animation techniques in pixel art.",
+    icon: Play,
+    color: "text-pixel-neon-purple",
+  },
+  {
+    slug: "how-to-improve-pixel-art-faster",
+    title: "How to Improve Pixel Art Faster (Without Practicing More Hours)",
+    description: "Smart techniques to level up your pixel art skills efficiently and consistently.",
+    icon: TrendingUp,
+    color: "text-pixel-neon-cyan",
+  },
+  {
+    slug: "pixel-art-color-palettes-how-many-colors",
+    title: "Pixel Art Color Palettes: How Many Colors Should You Use?",
+    description: "Learn how limited palettes improve clarity, style, and consistency in pixel art.",
+    icon: Palette,
+    color: "text-pixel-neon-pink",
+  },
+  {
+    slug: "is-pixel-art-worth-learning-in-2026",
+    title: "Is Pixel Art Still Worth Learning in 2026?",
+    description: "An honest look at pixel art careers, hobby value, and future opportunities.",
+    icon: CalendarClock,
+    color: "text-pixel-neon-cyan",
+  },
+  {
+    slug: "how-to-study-pixel-artists",
+    title: "How to Read and Study Other Pixel Artists' Work",
+    description: "Learn how to analyze pixel art to improve faster without copying blindly.",
+    icon: Search,
+    color: "text-pixel-neon-yellow",
+  },
+  {
+    slug: "pixel-art-style-guide",
+    title: "Pixel Art Style Guide: Chibi, Isometric, Retro & Modern",
+    description: "A breakdown of popular pixel art styles and how to choose one that fits you.",
+    icon: Shapes,
+    color: "text-pixel-neon-blue",
+  },
+  {
+    slug: "30-day-pixel-art-challenge",
+    title: "30-Day Pixel Art Challenge to Improve Your Skills",
+    description: "A daily pixel art challenge designed to help you improve without burnout.",
+    icon: Flame,
+    color: "text-pixel-neon-red",
+  },
+  {
+    slug: "pixel-art-for-games-vs-illustration",
+    title: "Pixel Art for Games vs Illustration: What's the Difference?",
+    description: "Key differences in workflow, constraints, and skills for game and illustration art.",
+    icon: Gamepad2,
+    color: "text-pixel-neon-cyan",
+  }  
 ];

@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        pixel: "bg-gradient-main text-white border-2 border-white/20 shadow-[4px_4px_0px_hsl(var(--pixel-purple))] hover:shadow-[2px_2px_0px_hsl(var(--pixel-purple))] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
+        pixel: "bg-gradient-main text-white border-2 border-white/20 shadow-[4px_4px_0px_hsl(var(--pixel-neon-purple))] hover:shadow-[2px_2px_0px_hsl(var(--pixel-purple))] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
         neon: "bg-transparent text-pixel-neon-cyan border-2 border-pixel-neon-cyan shadow-[0_0_5px_hsl(var(--pixel-neon-cyan))] hover:shadow-[0_0_10px_hsl(var(--pixel-neon-cyan))] hover:bg-pixel-neon-cyan/10",
         retro: "bg-pixel-neon-yellow text-background border-2 border-background shadow-[4px_4px_0px_hsl(var(--background))] hover:shadow-[2px_2px_0px_hsl(var(--background))] hover:translate-x-[2px] hover:translate-y-[2px]",
       },

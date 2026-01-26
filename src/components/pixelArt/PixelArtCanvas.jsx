@@ -382,7 +382,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     for (let row = 0; row < size; row++) {
       for (let col = 0; col < size; col++) {
-        const color = fullGrid[row][col] ?? "#ffffff"; // fallback for null
+        const color = fullGrid[row][col] ?? "#ffffff";
         ctx.fillStyle = color;
         ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
       }
@@ -437,7 +437,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
       croppedGrid.forEach((row, rowIndex) => {
         row.forEach((color, colIndex) => {
-          ctx.fillStyle = color;
+          ctx.fillStyle = color || "#ffffff";
           ctx.fillRect(
             colIndex * pixelSize,
             rowIndex * pixelSize,
@@ -446,7 +446,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           );
         });
       });
-
+      
       const galleryPreviewUrl = canvas.toDataURL("image/png");
 
       await onSave({

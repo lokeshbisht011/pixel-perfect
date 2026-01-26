@@ -43,8 +43,10 @@ module.exports = {
           "neon-green": "hsl(var(--pixel-neon-green))",
           "neon-yellow": "hsl(var(--pixel-neon-yellow))",
           "neon-red": "hsl(var(--pixel-neon-red))",
-          purple: "hsl(var(--pixel-purple))",
-          blue: "hsl(var(--pixel-blue))",
+          "neon-purple": "hsl(var(--pixel-neon-purple))",
+          "neon-blue": "hsl(var(--pixel-neon-blue))",
+          "purple": "hsl(var(--pixel-purple))",
+          "blue": "hsl(var(--pixel-blue))",
         },
       },
       borderRadius: {

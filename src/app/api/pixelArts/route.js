@@ -88,6 +88,8 @@ export async function GET(request) {
       createdAt: art.createdAt,
       likesCount: art.likesCount,
       commentsCount: art.commentsCount,
+      canCopy: art.canCopy,
+      title: art.title,
       profile: art.profile,
       likedByMe: currentProfileId ? art.likes.length > 0 : false,
     }));
