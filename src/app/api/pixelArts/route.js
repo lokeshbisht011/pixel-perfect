@@ -61,7 +61,7 @@ export async function GET(request) {
         likesCount: true,
         commentsCount: true,
         title: true,
-        canCopy: true,
+        canRemix: true,
         profile: {
           select: {
             id: true,
@@ -88,7 +88,7 @@ export async function GET(request) {
       createdAt: art.createdAt,
       likesCount: art.likesCount,
       commentsCount: art.commentsCount,
-      canCopy: art.canCopy,
+      canRemix: art.canRemix,
       title: art.title,
       profile: art.profile,
       likedByMe: currentProfileId ? art.likes.length > 0 : false,

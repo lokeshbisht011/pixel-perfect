@@ -2,8 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageSquare, Share2, Edit, Trash2, Copy } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import {
+  Heart,
+  MessageSquare,
+  Share2,
+  Edit,
+  Trash2,
+  Wand2,
+} from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useToast } from "../ui/use-toast";
@@ -12,6 +18,7 @@ import { useRouter } from "next/navigation";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import PixelArtModal from "./modal/PixelArtModal";
 import BoringAvatar from "boring-avatars";
+import { formatTimeAgo } from "@/lib/utils";
 
 const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   const { toast } = useToast();
@@ -23,7 +30,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
   const [deleting, setDeleting] = useState(false);
 
   const [isOwner, setIsOwner] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
+  const [isRemixing, setIsRemixing] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -63,40 +70,40 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/pixelArt?id=${pixelArt.id}`,
   };
 
-  const handleCopyPixelArt = async (e) => {
+  const handleRemixPixelArt = async (e) => {
     e.stopPropagation();
-    if (isCopying) return;
+    if (isRemixing) return;
 
-    setIsCopying(true);
+    setIsRemixing(true);
 
     try {
-      const res = await fetch("/api/copyPixelArt", {
+      const res = await fetch("/api/remixPixelArt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pixelArtId: pixelArt.id }),
       });
 
       if (!res.ok) {
-        throw new Error("Failed to copy pixel art");
+        throw new Error("Failed to remix pixel art");
       }
 
       const result = await res.json();
 
       toast({
-        title: "Copied!",
-        description: "You can now edit your copied pixel art",
+        title: "Remix created!",
+        description: "You can now edit and build on this artwork",
       });
 
       router.push(`/edit?id=${result.pixelArt.id}`);
     } catch (error) {
-      console.error("Copy pixel art error:", error);
+      console.error("Remix pixel art error:", error);
       toast({
         title: "Error",
-        description: "Failed to copy pixel art",
+        description: "Failed to Remix Pixel Art",
         variant: "destructive",
       });
     } finally {
-      setIsCopying(false);
+      setIsRemixing(false);
     }
   };
 
@@ -144,7 +151,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
         onClick={() => setIsModalOpen(true)}
       >
         {/* Image Container - Matches your design exactly */}
-        <div className="aspect-square mb-4 relative overflow-hidden bg-white border-2 border-border">
+        <div className="aspect-square mb-2 relative overflow-hidden bg-white border-2 border-border">
           <img
             src={pixelArt.imageUrl}
             alt={pixelArt.title}
@@ -174,7 +181,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
             <span className="font-mono">{pixelArt.profile.username}</span>
           </Link>
           <span className="text-[10px] font-mono uppercase">
-            {formatDistanceToNow(new Date(pixelArt.createdAt), {
+            {formatTimeAgo(new Date(pixelArt.createdAt), {
               addSuffix: true,
             })}
           </span>
@@ -182,7 +189,7 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
 
         {/* Bottom Bar: Stats + Actions */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm font-mono">
+          <div className="flex items-center gap-3 text-sm font-mono">
             <div
               onClick={handleLike}
               className={`flex items-center gap-1 cursor-pointer transition-colors ${
@@ -210,17 +217,17 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
               <Share2 className="h-4 w-4" />
             </Button>
 
-            {/* Copy */}
-            {pixelArt.canCopy && (
+            {/* Remix */}
+            {pixelArt.canRemix && (
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-4 w-4"
-                disabled={isCopying}
-                onClick={handleCopyPixelArt}
+                disabled={isRemixing}
+                onClick={handleRemixPixelArt}
               >
-                <Copy
-                  className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`}
+                <Wand2
+                  className={`h-4 w-4 ${isRemixing ? "animate-pulse" : ""}`}
                 />
               </Button>
             )}

@@ -38,11 +38,17 @@ model Profile {
 
   // Stats for Gamification
   pixelArtsCount      Int      @default(0)
+  remixesMadeCount    Int      @default(0)
+  remixesReceivedCount Int     @default(0)
+
   likesReceivedCount Int      @default(0)
   pixelArtsLikedCount Int      @default(0)
+  
   commentsCount       Int      @default(0)
+  
   currentStreak      Int      @default(0)
   maxStreakCount     Int      @default(0)
+
   lastActivity       DateTime?
 
   // Social
@@ -69,12 +75,17 @@ model PixelArt {
   title         String
   
   // Visibility & Permissions
-  canCopy      Boolean   @default(true)
+  canRemix      Boolean   @default(true)
   visibilityStatus      String
   contentRating String @default("NOT_RATED")
+
+  originalArtId   String?  @db.ObjectId
+  originalArt     PixelArt? @relation("RemixChain", fields: [originalArtId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  remixes         PixelArt[] @relation("RemixChain")
   
   likesCount    Int       @default(0)
   commentsCount  Int     @default(0)
+  remixCount Int @default(0)
 
   // Relationships
   profileId     String    @db.ObjectId

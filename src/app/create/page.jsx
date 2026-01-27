@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useBadges } from "@/hooks/useBadges";
 import LoginModal from "@/components/LoginModal";
 import PixelArtCanvas from "@/components/pixelArt/PixelArtCanvas";
+import { STORAGE_KEY } from "@/lib/utils";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -103,7 +104,7 @@ const CreatePixelArt = () => {
     data, // Matches the 'data' field in schema (the JSON string)
     gridSize, // New field from schema
     imageUrl,
-    canCopy,
+    canRemix,
     visibilityStatus,
     dailyPromptId, // Pass this if you're editing the daily challenge
   }) => {
@@ -127,7 +128,7 @@ const CreatePixelArt = () => {
         data,
         gridSize,
         imageUrl,
-        canCopy,
+        canRemix,
         visibilityStatus,
         dailyPromptId,
       };

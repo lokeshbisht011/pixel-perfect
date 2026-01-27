@@ -142,7 +142,7 @@ const PixelArtGallery = () => {
 
   return (
     <Layout>
-      <div className="container pt-8">
+      <div className="p-4 md:container md:pt-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
@@ -208,7 +208,7 @@ const PixelArtGallery = () => {
         <motion.div
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+          className="grid md:grid-cols-3 lg:grid-cols-4 gap-6"
           variants={{
             hidden: { opacity: 0 },
             visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
@@ -233,7 +233,7 @@ const PixelArtGallery = () => {
         {/* Loading / End */}
         <div ref={observerTarget} className="py-8 text-center col-span-full">
           {loading && (
-            <p className="text-muted-foreground">Loading pixel arts...</p>
+            <SectionSkeleton />
           )}
           {!hasMore && !selectedDate && pixelArts.length > 0 && (
             <p className="text-muted-foreground mt-4">
@@ -250,7 +250,8 @@ export default PixelArtGallery;
 
 function SectionSkeleton() {
   return (
-    <div className="grid md:grid-cols-3 gap-6 mt-4">
+    <div className="grid md:grid-cols-4 gap-4 mt-4">
+      <div className="h-80 animate-pulse rounded-md bg-muted" />
       <div className="h-80 animate-pulse rounded-md bg-muted" />
       <div className="h-80 animate-pulse rounded-md bg-muted" />
       <div className="h-80 animate-pulse rounded-md bg-muted" />

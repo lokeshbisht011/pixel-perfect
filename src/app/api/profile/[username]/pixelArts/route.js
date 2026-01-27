@@ -18,7 +18,7 @@ export async function GET(req, { params }) {
       createdAt: true,
       likesCount: true,
       commentsCount: true,
-      canCopy: true,
+      canRemix: true,
       visibilityStatus: true,
       contentRating: true,
       title: true,

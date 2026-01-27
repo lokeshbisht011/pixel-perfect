@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/authOptions";
+import { startOfDay, differenceInCalendarDays } from "date-fns";
+import { calculateStreak } from "@/lib/streaks";
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -13,10 +15,10 @@ export async function POST(req) {
   const body = await req.json();
   const {
     title,
-    data, // The JSON stringified grid array
-    gridSize, // The integer size (e.g., 32)
-    imageUrl, // The PNG preview
-    canCopy,
+    data,
+    gridSize,
+    imageUrl,
+    canRemix,
     visibilityStatus,
     dailyPromptId,
   } = body;
@@ -30,19 +32,35 @@ export async function POST(req) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const pixelArt = await prisma.pixelArt.create({
-      data: {
-        title,
-        data, // Stores the grid array
-        gridSize: parseInt(gridSize),
-        imageUrl,
-        canCopy: !!canCopy,
-        visibilityStatus,
-        profileId: profile.id,
-        dailyPromptId,
-        deletedAt: null
-      },
+    const streakUpdate = calculateStreak({
+      lastActivity: profile.lastActivity,
+      currentStreak: profile.currentStreak,
+      maxStreakCount: profile.maxStreakCount,
     });
+
+    const [pixelArt] = await prisma.$transaction([
+      prisma.pixelArt.create({
+        data: {
+          title,
+          data,
+          gridSize: parseInt(gridSize),
+          imageUrl,
+          canRemix: !!canRemix,
+          visibilityStatus,
+          profileId: profile.id,
+          dailyPromptId,
+          deletedAt: null,
+        },
+      }),
+
+      prisma.profile.update({
+        where: { id: profile.id },
+        data: {
+          pixelArtsCount: { increment: 1 },
+          ...streakUpdate,
+        },
+      }),
+    ]);
 
     return NextResponse.json({ success: true, pixelArt });
   } catch (error) {

@@ -17,7 +17,7 @@ export async function PUT(req, { params }) {
     data,           // The JSON stringified grid array
     gridSize,       // The integer size (e.g., 32)
     imageUrl,       // The PNG preview
-    canCopy,
+    canRemix,
     visibilityStatus,
     dailyPromptId
   } = body;
@@ -47,7 +47,7 @@ export async function PUT(req, { params }) {
         data,
         gridSize: parseInt(gridSize),
         imageUrl,
-        canCopy: !!canCopy,
+        canRemix: !!canRemix,
         visibilityStatus: visibilityStatus,
         dailyPromptId,
         updatedAt: new Date(),

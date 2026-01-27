@@ -34,7 +34,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [title, setTitle] = useState(prompt?.prompt || "Untitled");
   const [submitToTodaysFeed, setSubmitToTodaysFeed] = useState(true);
   const [makePrivate, setMakePrivate] = useState(false);
-  const [canCopy, setCanCopy] = useState(true);
+  const [canRemix, setCanRemix] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
@@ -124,7 +124,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       } else {
         setSubmitToTodaysFeed(false);
       }
-      setCanCopy(pixelArt.canCopy);
+      setCanRemix(pixelArt.canRemix);
       if (!pixelArt.title && prompt?.prompt) {
         setTitle(prompt.prompt);
       }
@@ -144,7 +144,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     } else if (prompt?.prompt) {
       setTitle(prompt.prompt);
       setSubmitToTodaysFeed(true);
-      setCanCopy(true);
+      setCanRemix(true);
     }
   }, [pixelArt, prompt]);
 
@@ -454,7 +454,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
         data: JSON.stringify(croppedGrid),
         gridSize,
         imageUrl: galleryPreviewUrl,
-        canCopy: canCopy,
+        canRemix: canRemix,
         visibilityStatus: makePrivate
           ? VISIBILITY_STATUS.PRIVATE
           : VISIBILITY_STATUS.PUBLIC,
@@ -677,8 +677,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
               <Separator />
 
               <Settings
-                canCopy={canCopy}
-                setCanCopy={setCanCopy}
+                canRemix={canRemix}
+                setCanRemix={setCanRemix}
                 submitToTodaysFeed={submitToTodaysFeed}
                 setSubmitToTodaysFeed={setSubmitToTodaysFeed}
                 makePrivate={makePrivate}

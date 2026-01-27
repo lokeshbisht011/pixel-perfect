@@ -77,6 +77,13 @@ export async function POST(req, { params }) {
             },
           });
 
+          await tx.profile.update({
+            where: { id: profile.id },
+            data: {
+              pixelArtsLikedCount: { decrement: 1 },
+            },
+          });
+
           likesCount -= 1;
         }
 
@@ -101,6 +108,13 @@ export async function POST(req, { params }) {
           where: { id: pixelArt.profileId },
           data: {
             likesReceivedCount: { increment: 1 },
+          },
+        });
+
+        await tx.profile.update({
+          where: { id: profile.id },
+          data: {
+            pixelArtsLikedCount: { increment: 1 },
           },
         });
 

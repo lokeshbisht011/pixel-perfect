@@ -49,7 +49,7 @@ const PixelArtEditor = () => {
     data, // Matches the 'data' field in schema (the JSON string)
     gridSize, // New field from schema
     imageUrl,
-    canCopy,
+    canRemix,
     visibilityStatus,
     dailyPromptId,
   }) => {
@@ -76,7 +76,7 @@ const PixelArtEditor = () => {
           data, // The JSON.stringify(fullGrid)
           gridSize, // e.g., 32, 64, or 128
           imageUrl, // The PNG base64 or storage URL
-          canCopy,
+          canRemix,
           visibilityStatus,
           dailyPromptId,
         }),

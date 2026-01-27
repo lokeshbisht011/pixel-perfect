@@ -35,6 +35,7 @@ export async function POST(req, { params }) {
         content: content.trim(),
         pixelArtId,
         profileId: profile.id,
+        deletedAt: null,
       },
       include: {
         profile: {

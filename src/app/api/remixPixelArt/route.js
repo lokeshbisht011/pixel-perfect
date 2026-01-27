@@ -50,29 +50,50 @@ export async function POST(request) {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      const copied = await tx.pixelArt.create({
+      const remixed = await tx.pixelArt.create({
         data: {
           title: original.title
-            ? `Copy of ${original.title}`
-            : "Untitled Copy",
+            ? `Remix of ${original.title}`
+            : "Untitled Remix",
           data: original.data,
           gridSize: original.gridSize,
           imageUrl: original.imageUrl,
-          canCopy: true,
-          profileId: profile.id,
+
+          canRemix: true,
           visibilityStatus: VISIBILITY_STATUS.PUBLIC,
+
+          originalArtId: original.id,
+
+          profileId: profile.id,
           deletedAt: null
         },
       });
 
+      await tx.pixelArt.update({
+        where: { id: original.id },
+        data: {
+          remixCount: { increment: 1 },
+        },
+      });
+    
       await tx.profile.update({
         where: { id: profile.id },
         data: {
           pixelArtsCount: { increment: 1 },
+          remixesMadeCount: { increment: 1 },
         },
       });
-
-      return copied;
+    
+      if (original.profileId !== profile.id) {
+        await tx.profile.update({
+          where: { id: original.profileId },
+          data: {
+            remixesReceivedCount: { increment: 1 },
+          },
+        });
+      }
+    
+      return remixed;
     });
 
     return NextResponse.json({
@@ -80,9 +101,9 @@ export async function POST(request) {
       pixelArt: result,
     });
   } catch (error) {
-    console.error("Error copying Pixel Art:", error);
+    console.error("Error Remixing Pixel Art:", error);
     return NextResponse.json(
-      { error: "Failed to copy Pixel Art" },
+      { error: "Failed to Remix Pixel Art" },
       { status: 500 }
     );
   }

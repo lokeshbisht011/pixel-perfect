@@ -2,13 +2,13 @@ import ShareModal from "@/components/ShareModal";
 import { Button } from "@/components/ui/button";
 import { useBadges } from "@/hooks/useBadges";
 import {
-  Copy,
   Edit,
   Heart,
   MessageCircle,
   MessageSquare,
   Share2,
   Trash2,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -26,7 +26,7 @@ export default function PixelArtActions({
   const [comments, setComments] = useState([]);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
+  const [isRemixing, setIsRemixing] = useState(false);
 
   const shareData = {
     title: isOwner
@@ -44,40 +44,41 @@ export default function PixelArtActions({
     setComments(pixelArt.comments);
   }, [pixelArt]);
 
-  const handleCopyPixelArt = async (e) => {
+  const handleRemixPixelArt = async (e) => {
     e.stopPropagation();
-    if (isCopying) return;
+    if (isRemixing) return;
 
-    setIsCopying(true);
+    setIsRemixing(true);
 
     try {
-      const res = await fetch("/api/copyPixelArt", {
+      const res = await fetch("/api/remixPixelArt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pixelArtId: pixelArt.id }),
       });
 
       if (!res.ok) {
-        throw new Error("Failed to copy pixel art");
+        throw new Error("Failed to Remix Pixel Art");
       }
 
       const result = await res.json();
 
       toast({
-        title: "Copied!",
-        description: "You can now edit your copied pixel art",
+        title: "Remix created!",
+        description: "You can now edit and build on this artwork",
       });
+      
 
       router.push(`/edit?id=${result.pixelArt.id}`);
     } catch (error) {
-      console.error("Copy pixel art error:", error);
+      console.error("Remix Pixel Art error:", error);
       toast({
-        title: "Error",
-        description: "Failed to copy pixel art",
+        title: "Network Error",
+        description: "Failed to Remix Pixel art",
         variant: "destructive",
       });
     } finally {
-      setIsCopying(false);
+      setIsRemixing(false);
     }
   };
 
@@ -137,15 +138,15 @@ export default function PixelArtActions({
             <Share2 className="h-4 w-4" />
           </Button>
 
-          {/* Copy */}
+          {/* Remix */}
           <Button
             variant="ghost"
             size="icon"
             className="h-4 w-4"
-            disabled={isCopying}
-            onClick={handleCopyPixelArt}
+            disabled={isRemixing}
+            onClick={handleRemixPixelArt}
           >
-            <Copy className={`h-4 w-4 ${isCopying ? "animate-pulse" : ""}`} />
+            <Wand2 className={`h-4 w-4 ${isRemixing ? "animate-pulse" : ""}`} />
           </Button>
         </div>
 

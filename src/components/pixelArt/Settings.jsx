@@ -1,12 +1,18 @@
 import React from "react";
 import { Button } from "../ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Save, Download } from "lucide-react";
+import { Loader2, Save, Download, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 const Settings = ({
   /* settings state */
-  canCopy,
-  setCanCopy,
+  canRemix,
+  setCanRemix,
   submitToTodaysFeed,
   setSubmitToTodaysFeed,
   makePrivate,
@@ -22,7 +28,7 @@ const Settings = ({
     setMakePrivate(value);
 
     if (value) {
-      setCanCopy(false);
+      setCanRemix(false);
       setSubmitToTodaysFeed(false);
     }
   };
@@ -34,22 +40,38 @@ const Settings = ({
         <h3 className="font-bold mb-4 text-card-foreground">Settings</h3>
 
         <div className="space-y-3">
-          {/* Allow Copy */}
+          {/* Allow Remixing */}
           <div className="flex items-center space-x-3">
             <Checkbox
-              id="canCopy"
-              checked={canCopy}
+              id="canRemix"
+              checked={canRemix}
               disabled={makePrivate}
-              onCheckedChange={(checked) => setCanCopy(!!checked)}
+              onCheckedChange={(checked) => setCanRemix(!!checked)}
               className="border-2 border-primary data-[state=checked]:bg-primary"
             />
             <label
-              htmlFor="canCopy"
+              htmlFor="canRemix"
               className={`text-sm font-mono cursor-pointer select-none ${
                 makePrivate ? "opacity-50" : ""
               }`}
             >
-              Allow others to copy
+              Allow remixing
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <sup className="ml-1 inline-flex align-middle">
+                      <Info className="h-3 w-3 text-muted-foreground hover:text-foreground transition" />
+                    </sup>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs leading-relaxed">
+                    Others can remix your pixel art and build on it.
+                    <br />
+                    <span className="opacity-80">
+                      Your original will always be credited.
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </label>
           </div>
 
@@ -59,9 +81,7 @@ const Settings = ({
               id="submitToTodaysFeed"
               checked={submitToTodaysFeed}
               disabled={makePrivate}
-              onCheckedChange={(checked) =>
-                setSubmitToTodaysFeed(!!checked)
-              }
+              onCheckedChange={(checked) => setSubmitToTodaysFeed(!!checked)}
               className="border-2 border-primary data-[state=checked]:bg-primary"
             />
             <label
@@ -113,11 +133,7 @@ const Settings = ({
           )}
         </Button>
 
-        <Button
-          variant="pixel"
-          className="w-full"
-          onClick={onDownload}
-        >
+        <Button variant="pixel" className="w-full" onClick={onDownload}>
           <Download className="w-4 h-4 mr-2" />
           Download
         </Button>

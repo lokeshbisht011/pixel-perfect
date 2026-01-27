@@ -8,9 +8,7 @@ export async function GET(request, { params }) {
 
   try {
     const pixelArt = await prisma.pixelArt.findUnique({
-      where: { id: pixelArtId,
-        deletedAt: null
-       },
+      where: { id: pixelArtId, deletedAt: null },
       include: {
         profile: {
           select: {
@@ -25,6 +23,9 @@ export async function GET(request, { params }) {
           },
         },
         comments: {
+          where: {
+            deletedAt: null,
+          },
           orderBy: { createdAt: "desc" },
           include: {
             profile: {

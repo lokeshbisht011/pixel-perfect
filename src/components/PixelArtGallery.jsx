@@ -69,7 +69,7 @@ const HorizontalScrollRow = ({
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : pixelArts.length > 0 ? (
-          <div className="mt-4 md:mt-6 grid grid-flow-col auto-cols-[minmax(250px,250px)] md:auto-cols-[minmax(350px,350px)] gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2">
+          <div className="mt-4 md:mt-6 grid grid-flow-col auto-cols-[minmax(280px,280px)] md:auto-cols-[minmax(350px,350px)] gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2">
             {pixelArts.map((pixelArt) => (
               <PixelArtCard
                 key={pixelArt.id}
