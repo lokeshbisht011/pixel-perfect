@@ -15,7 +15,7 @@ export async function generateMetadata({ searchParams }) {
     const pixelArt = await res.json();
 
     const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/pixelArt?id=${pixelArt.id}`;
-    const pageTitle = pixelArt.title || "Pixel Art Daily";
+    const pageTitle = pixelArt.title || "PixelArt Daily";
     const pageDesc = `Check out this pixel art by ${pixelArt.profile.username}!`;
     const pageImage = pixelArt.imageUrl;
 
