@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns"
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));

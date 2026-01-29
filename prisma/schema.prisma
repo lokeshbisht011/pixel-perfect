@@ -111,6 +111,7 @@ model DailyPrompt {
   promptDate        String  @unique
 
   pixelArts         PixelArt[]
+  pixelArtsCount    Int       @default(0)
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

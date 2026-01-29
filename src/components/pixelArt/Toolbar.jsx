@@ -15,12 +15,11 @@ import ColorPicker from "../ColorPicker";
 import { Input } from "../ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { tools } from "@/lib/canvasUtils";
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64, 96, 128];
-const ZOOM_LEVELS = [1, 2, 3, 4, 6, 8];
 
 const Toolbar = ({
-  tools,
   title,
   setTitle,
   activeTool,

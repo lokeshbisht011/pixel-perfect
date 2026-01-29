@@ -105,7 +105,7 @@ export default function ProfileModal({ isOpen, onClose, profile }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-card border-none p-0">
+      <DialogContent className="max-w-md -hidden bg-card border-none -hidden p-0">
         <div className="pixel-card w-full p-4 sm:p-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl font-bold font-mono text-center neon-glow text-primary">

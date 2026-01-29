@@ -4,13 +4,20 @@ import Avatar from "boring-avatars";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 
-// Palettes from your original code
 const palettes = [
-  ["#92A1C6", "#146A7C", "#F0AB3D", "#C271B4", "#C20D90"],
-  ["#6DB3F2", "#1C4E80", "#E6F7FF", "#F0A6CA", "#9B5DE5"],
-  ["#FFBE0B", "#FB5607", "#FF006E", "#8338EC", "#3A86FF"],
-  ["#264653", "#2A9D8F", "#E9C46A", "#F4A261", "#E76F51"],
+  // Neon Arcade (cyan / magenta / purple)
+  ["#00E5FF", "#7C4DFF", "#FF2EC4", "#00FF9C", "#1A1A2E"],
+
+  // Retro CRT (green phosphor + amber)
+  ["#00FF66", "#66FF99", "#FFD166", "#FF7A00", "#1B1F1D"],
+
+  // Synthwave Sunset
+  ["#FF006E", "#FB5607", "#FFBE0B", "#8338EC", "#3A86FF"],
+
+  // Pixel Pastel (soft but readable)
+  ["#A8E6CF", "#DCEDC1", "#FFD3B6", "#FFAAA5", "#CDB4DB"],
 ];
+
 
 const generateAvatars = (count) => {
   const newAvatars = Array.from({ length: count }, () => ({
@@ -35,14 +42,11 @@ export default function AvatarEditor({ value, onChange }) {
     if (scrollDiv) {
       const { scrollWidth, scrollLeft, clientWidth } = scrollDiv;
       const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 100;
-      
+
       if (isAtEnd && !isGenerating) {
         setIsGenerating(true);
         setTimeout(() => {
-          setAvatars((prevAvatars) => [
-            ...prevAvatars,
-            ...generateAvatars(10),
-          ]);
+          setAvatars((prevAvatars) => [...prevAvatars, ...generateAvatars(10)]);
           setIsGenerating(false);
         }, 500);
       }
@@ -59,18 +63,15 @@ export default function AvatarEditor({ value, onChange }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between pt-2">
-        <p className="text-sm font-medium">Choose your Avatar</p>
-      </div>
-      <div 
+      <div
         ref={scrollRef}
-        className="overflow-x-auto"
-        style={{ 
-          scrollbarWidth: 'thin',
-          WebkitOverflowScrolling: 'touch'
+        className="w-full overflow-x-auto"
+        style={{
+          scrollbarWidth: "thin",
+          WebkitOverflowScrolling: "touch",
         }}
       >
-        <div className="flex items-center gap-3 py-2 pr-3">
+        <div className="flex w-max items-center gap-3 py-2 pr-3">
           {avatars.map((config) => {
             const selected = value?.seed === config.seed;
             return (

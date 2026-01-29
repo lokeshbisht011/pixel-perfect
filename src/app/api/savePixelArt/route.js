@@ -1,10 +1,3 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/authOptions";
-import { startOfDay, differenceInCalendarDays } from "date-fns";
-import { calculateStreak } from "@/lib/streaks";
-
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 
@@ -38,7 +31,7 @@ export async function POST(req) {
       maxStreakCount: profile.maxStreakCount,
     });
 
-    const [pixelArt] = await prisma.$transaction([
+    const transactionOps = [
       prisma.pixelArt.create({
         data: {
           title,
@@ -60,7 +53,20 @@ export async function POST(req) {
           ...streakUpdate,
         },
       }),
-    ]);
+    ];
+
+    if (dailyPromptId) {
+      transactionOps.push(
+        prisma.dailyPrompt.update({
+          where: { id: dailyPromptId },
+          data: {
+            pixelArtsCount: { increment: 1 },
+          },
+        })
+      );
+    }
+
+    const [pixelArt] = await prisma.$transaction(transactionOps);
 
     return NextResponse.json({ success: true, pixelArt });
   } catch (error) {

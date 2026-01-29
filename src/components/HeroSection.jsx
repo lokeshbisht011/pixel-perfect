@@ -97,7 +97,7 @@ const HeroSection = () => {
 
           {/* Heading */}
           <h1 className="font-mono font-bold text-2xl md:text-3xl mb-6">
-            <span className="text-pixel-neon-cyan">Today’s</span>{" "}
+            <span className="text-pixel-neon-cyan">Today's</span>{" "}
             <span className="text-pixel-neon-pink">Pixel Art Prompt</span>
           </h1>
 
@@ -109,7 +109,7 @@ const HeroSection = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              {loading ? "…" : prompt.prompt}
+              {loading ? <PromptLoading /> : prompt.prompt}
             </motion.h2>
           </div>
 
@@ -151,3 +151,27 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
+function PromptLoading() {
+  return (
+    <div className="flex items-center justify-center h-[3rem]">
+      <div className="flex gap-2">
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className={`w-2 h-2 ${
+              i % 2 === 0 ? "bg-pixel-neon-cyan" : "bg-pixel-neon-pink"
+            }`}
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{
+              duration: 1.4,
+              delay: i * 0.15,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

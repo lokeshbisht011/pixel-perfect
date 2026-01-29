@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Brush, Eraser, Move, PaintBucket, Pipette } from "lucide-react";
 import { toast } from "../ui/use-toast";
 import Toolbar from "./Toolbar";
 import Settings from "./Settings";
 import { STORAGE_KEY, VISIBILITY_STATUS } from "@/lib/utils";
+import { floodFill } from "@/lib/canvasUtils";
+import { Button } from "../ui/button";
 
 const saveDraft = (data) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -40,6 +41,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [isPanning, setIsPanning] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isEyedropperActive, setIsEyedropperActive] = useState(false);
+  const [selection, setSelection] = useState({
+    mode: "idle",
+    start: null,
+    end: null,
+    offset: { row: 0, col: 0 },
+  });
+
+  const [selectionData, setSelectionData] = useState(null);
 
   const panStartRef = useRef({ x: 0, y: 0 });
   const panOriginRef = useRef({ x: 0, y: 0 });
@@ -48,6 +57,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const undoInProgressRef = useRef(false);
   const gridRef = useRef(null);
   const containerRef = useRef(null);
+  const fullGridRef = useRef(fullGrid);
+  const lastHoverCellRef = useRef({ row: 0, col: 0 });
+  const lastSelectionBoxRef = useRef(null);
+  const baseGridRef = useRef(null);
+
+  useEffect(() => {
+    fullGridRef.current = fullGrid;
+  }, [fullGrid]);
 
   useEffect(() => {
     const draft = loadDraft();
@@ -168,44 +185,28 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       return next;
     });
   };
-
   const handleFill = (startRow, startCol) => {
-    setFullGrid((prev) => {
-      // Clone efficiently
-      const next = prev.map((row) => [...row]);
+    const fillColor =
+      activeToolRef.current === "eraser" ? "#ffffff" : activeColorRef.current;
 
-      const targetColor = next[startRow][startCol];
-      const fillColor =
-        activeToolRef.current === "eraser" ? "#ffffff" : activeColorRef.current;
+    const baseGrid = fullGridRef.current;
 
-      if (targetColor === fillColor) return prev;
-
-      const stack = [[startRow, startCol]];
-
-      while (stack.length) {
-        const [row, col] = stack.pop();
-
-        if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) {
-          continue;
-        }
-
-        if (next[row][col] !== targetColor) continue;
-
-        next[row][col] = fillColor;
-
-        stack.push([row + 1, col]);
-        stack.push([row - 1, col]);
-        stack.push([row, col + 1]);
-        stack.push([row, col - 1]);
-      }
-
-      saveCanvasState({
-        grid: next,
-        gridSize,
-      });
-
-      return next;
+    const filledGrid = floodFill({
+      grid: baseGrid,
+      startRow,
+      startCol,
+      gridSize,
+      fillColor,
     });
+
+    if (!filledGrid) return;
+
+    saveCanvasState({
+      grid: filledGrid,
+      gridSize,
+    });
+
+    setFullGrid(filledGrid);
   };
 
   const handlePointerDown = (e, row, col) => {
@@ -224,13 +225,187 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       return;
     }
 
-    setIsDrawing(true);
+    if (activeTool === "select") {
+      if (
+        selection.mode === "selected" &&
+        isInsideSelection(row, col, selection)
+      ) {
+        setSelection((prev) => ({
+          ...prev,
+          mode: "moving",
+          offset: {
+            row: row - prev.start.row,
+            col: col - prev.start.col,
+          },
+        }));
+        const box = normalizeSelection(selection);
+        if (!box || !selectionData) return;
+
+        // 1️⃣ Create base grid snapshot
+        const base = fullGrid.map((r) => [...r]);
+
+        // 2️⃣ Remove selected pixels from base grid
+        selectionData.forEach((rowData, r) => {
+          rowData.forEach((color, c) => {
+            if (color == null) return;
+
+            const tr = box.top + r;
+            const tc = box.left + c;
+
+            if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
+              base[tr][tc] = null;
+            }
+          });
+        });
+
+        baseGridRef.current = base;
+
+        // 3️⃣ Store initial box for offsets
+        lastSelectionBoxRef.current = box;
+
+        return;
+      }
+
+      lastHoverCellRef.current = { row, col };
+
+      setSelection({
+        mode: "selecting",
+        start: { row, col },
+        end: { row, col },
+      });
+
+      return;
+    }
 
     if (activeTool === "fill") {
       handleFill(row, col);
     } else {
+      setIsDrawing(true);
       handlePixelClick(row, col);
     }
+  };
+
+  const handlePointerMove = (e) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const rect = grid.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const col = Math.floor((x / rect.width) * gridSize);
+    const row = Math.floor((y / rect.height) * gridSize);
+
+    if (activeTool === "select") {
+      if (selection.mode === "selecting") {
+        setSelection((prev) => ({
+          ...prev,
+          end: { row, col },
+        }));
+        return;
+      }
+      if (selection.mode === "moving" && selection.offset && selectionData) {
+        const box = normalizeSelection(selection);
+        if (!box) return;
+
+        const newTop = row - selection.offset.row;
+        const newLeft = col - selection.offset.col;
+
+        const newBox = {
+          top: newTop,
+          left: newLeft,
+          bottom: newTop + (box.bottom - box.top),
+          right: newLeft + (box.right - box.left),
+        };
+
+        setFullGrid(() => {
+          if (!baseGridRef.current || !selectionData) return fullGrid;
+
+          const next = baseGridRef.current.map((r) => [...r]);
+
+          // Draw selectionData at new position (non-null only)
+          selectionData.forEach((rowData, r) => {
+            rowData.forEach((color, c) => {
+              if (color == null) return;
+
+              const tr = newTop + r;
+              const tc = newLeft + c;
+
+              if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
+                next[tr][tc] = color;
+              }
+            });
+          });
+
+          return next;
+        });
+
+        lastSelectionBoxRef.current = newBox;
+
+        setSelection((prev) => ({
+          ...prev,
+          start: { row: newTop, col: newLeft },
+          end: { row: newBox.bottom, col: newBox.right },
+        }));
+
+        return;
+      }
+    }
+
+    if (!isDrawing || activeTool === "fill") return;
+
+    if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+      handlePixelClick(row, col);
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+
+    if (activeTool === "select") {
+      if (selection.mode === "selecting") {
+        setSelection((prev) => ({
+          ...prev,
+          mode: "selected",
+        }));
+
+        const box = normalizeSelection(selection);
+        if (!box) return;
+
+        const data = fullGrid
+          .slice(box.top, box.bottom + 1)
+          .map((row) => row.slice(box.left, box.right + 1));
+
+        setSelectionData(data);
+        return;
+      }
+      if (selection.mode === "moving") {
+        saveCanvasState({
+          grid: fullGridRef.current,
+          gridSize,
+        });
+
+        baseGridRef.current = null;
+        lastSelectionBoxRef.current = null;
+
+        setSelection((prev) => ({
+          ...prev,
+          mode: "selected",
+          offset: undefined,
+        }));
+      }
+      return;
+    }
+
+    if (isEyedropperActive) return;
+
+    if (!isDrawing) return;
+
+    setIsDrawing(false);
+    saveCanvasState({ grid: fullGrid, gridSize: sliderGridSize });
   };
 
   const getSnappedPan = useCallback(
@@ -298,36 +473,137 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     } catch {}
   };
 
-  const handlePointerMove = (e) => {
-    if (!isDrawing || activeTool === "fill") return;
+  // select tool methods
 
-    const grid = gridRef.current;
-    if (!grid) return;
+  const normalizeSelection = () => {
+    if (!selection.start || !selection.end) return null;
 
-    const rect = grid.getBoundingClientRect();
-
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const col = Math.floor((x / rect.width) * gridSize);
-    const row = Math.floor((y / rect.height) * gridSize);
-
-    if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
-      handlePixelClick(row, col);
-    }
+    return {
+      top: Math.min(selection.start.row, selection.end.row),
+      left: Math.min(selection.start.col, selection.end.col),
+      bottom: Math.max(selection.start.row, selection.end.row),
+      right: Math.max(selection.start.col, selection.end.col),
+    };
   };
 
-  const handlePointerUp = (e) => {
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
+  const isInsideSelection = (row, col, sel) => {
+    const box = normalizeSelection(sel);
+    if (!box) return false;
 
-    if (isEyedropperActive) return;
+    return (
+      row >= box.top && row <= box.bottom && col >= box.left && col <= box.right
+    );
+  };
 
-    if (!isDrawing) return;
+  const getSelectionBorders = (row, col, sel) => {
+    const { top, left, bottom, right } = sel;
 
-    setIsDrawing(false);
-    saveCanvasState({ grid: fullGrid, gridSize: fullGrid.length });
+    if (row < top || row > bottom || col < left || col > right) {
+      return null;
+    }
+
+    return {
+      top: row === top,
+      bottom: row === bottom,
+      left: col === left,
+      right: col === right,
+    };
+  };
+
+  const getSelectionBorderStyle = (row, col, sel) => {
+    const borders = getSelectionBorders(row, col, sel);
+    if (!borders) return {};
+
+    const color = "#3b82f6";
+    const style = "1px dashed " + color;
+
+    return {
+      borderTop: borders.top ? style : "1px solid transparent",
+      borderBottom: borders.bottom ? style : "1px solid transparent",
+      borderLeft: borders.left ? style : "1px solid transparent",
+      borderRight: borders.right ? style : "1px solid transparent",
+    };
+  };
+
+  const getPixelColor = (row, col) => {
+    if (selection.mode === "selected" && selectionData) {
+      const box = normalizeSelection();
+      if (!box) return fullGrid[row][col];
+
+      const { top, left, bottom, right } = box;
+
+      if (row >= top && row <= bottom && col >= left && col <= right) {
+        const sr = row - top;
+        const sc = col - left;
+        const color = selectionData[sr]?.[sc];
+
+        // 👇 KEY CHANGE: treat null as transparent
+        if (color != null) {
+          return color;
+        }
+      }
+    }
+
+    return fullGrid[row][col];
+  };
+
+  const handleCopy = () => {
+    if (selection.mode !== "selected") return;
+
+    const box = normalizeSelection(selection);
+    if (!box) return;
+
+    const data = fullGrid
+      .slice(box.top, box.bottom + 1)
+      .map((row) => row.slice(box.left, box.right + 1));
+
+    setSelectionData(data);
+  };
+
+  const handleCut = () => {
+    if (selection.mode !== "selected") return;
+
+    const box = normalizeSelection(selection);
+    if (!box) return;
+
+    const data = fullGrid
+      .slice(box.top, box.bottom + 1)
+      .map((row) => row.slice(box.left, box.right + 1));
+
+    setSelectionData(data);
+
+    const nextGrid = fullGrid.map((r) => [...r]);
+
+    for (let r = box.top; r <= box.bottom; r++) {
+      for (let c = box.left; c <= box.right; c++) {
+        nextGrid[r][c] = null;
+      }
+    }
+
+    saveCanvasState({ grid: nextGrid, gridSize });
+    setFullGrid(nextGrid);
+
+    setSelection({
+      mode: "idle",
+      start: null,
+      end: null,
+    });
+  };
+
+  const handlePaste = () => {
+    if (!selectionData) return;
+
+    // const { row, col } = lastHoverCellRef.current;
+
+    setSelection({
+      mode: "selected",
+      start: { row: 0, col: 0 },
+      end: {
+        row: selectionData.length - 1,
+        col: selectionData[0].length - 1,
+      },
+      offset: { row: 0, col: 0 },
+    });
   };
 
   const handleZoomChange = (nextZoom) => {
@@ -368,6 +644,12 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     const newGrid = createEmptyGrid(MAX_GRID_SIZE);
     setFullGrid(newGrid);
     saveCanvasState({ grid: newGrid, gridSize: sliderGridSize }, true);
+    setSelection({
+      mode: "idle",
+      start: null,
+      end: null,
+      offset: { row: 0, col: 0 },
+    });
   };
 
   const handleDownload = () => {
@@ -446,7 +728,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           );
         });
       });
-      
+
       const galleryPreviewUrl = canvas.toDataURL("image/png");
 
       await onSave({
@@ -472,18 +754,19 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     }
   };
 
-  const tools = [
-    { id: "brush", icon: Brush, label: "Brush" },
-    { id: "eraser", icon: Eraser, label: "Eraser" },
-    { id: "fill", icon: PaintBucket, label: "Fill" },
-    { id: "pan", icon: Move, label: "Pan" },
-  ];
-
   // update cursor based on tool
   useEffect(() => {
     if (!gridRef.current) return;
 
     const el = gridRef.current;
+
+    if (activeTool !== "select") {
+      setSelection({
+        mode: "idle",
+        start: null,
+        end: null,
+      });
+    }
 
     if (isEyedropperActive) {
       el.style.cursor = "copy";
@@ -491,6 +774,10 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     }
 
     switch (activeTool) {
+      case "select":
+        el.style.cursor = "crosshair";
+        break;
+
       case "pan":
         el.style.cursor = isPanning ? "grabbing" : "grab";
         break;
@@ -533,6 +820,9 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           e.preventDefault();
           setIsEyedropperActive(false);
           setActiveTool("brush");
+          //TODO add if condition
+          setSelection(null);
+          setIsDraggingSelection(false);
           break;
 
         case "b":
@@ -559,6 +849,22 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           setActiveTool("pan");
           break;
 
+        case "s":
+          setActiveTool("select");
+          break;
+
+        case "c":
+          if (e.metaKey || e.ctrlKey) handleCopy();
+          break;
+
+        case "x":
+          if (e.metaKey || e.ctrlKey) handleCut();
+          break;
+
+        case "v":
+          if (e.metaKey || e.ctrlKey) handlePaste();
+          break;
+
         default:
           break;
       }
@@ -577,6 +883,21 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
         transition={{ duration: 0.5 }}
       >
         <div className="grid lg:grid-cols-3 gap-2 md:gap-6 items-stretch">
+          {activeTool === "select" && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-background border rounded-lg p-2 shadow">
+              <Button size="sm" variant={"pixel"} onClick={handleCopy}>Copy</Button>
+              <Button size="sm" variant={"pixel"} onClick={handleCut}>Cut</Button>
+              <Button size="sm" variant={"pixel"} onClick={handlePaste}>Paste</Button>
+              <Button size="sm" variant={"pixel"}
+                onClick={() =>
+                  setSelection({ mode: "idle", start: null, end: null })
+                }
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+
           {/* MOBILE TITLE */}
           <div className="lg:hidden sticky top-0 z-10 bg-background border-b border-border px-3 py-2">
             <Input
@@ -626,24 +947,53 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                   }
                 >
                   {displayGrid.map((row, rowIndex) =>
-                    row.map((color, colIndex) => (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        className="touch-none select-none"
-                        style={{
-                          backgroundColor:
-                            color ??
-                            ((rowIndex + colIndex) % 2 === 0
-                              ? "#f0f0f0"
-                              : "#ffffff"),
-                        }}
-                        onPointerDown={
-                          activeTool !== "pan"
-                            ? (e) => handlePointerDown(e, rowIndex, colIndex)
-                            : undefined
-                        }
-                      />
-                    ))
+                    row.map((color, colIndex) => {
+                      // const selectionBox =
+                      //   selection.mode !== "idle" &&
+                      //   selection.start &&
+                      //   selection.end
+                      //     ? normalizeSelection(selection.start, selection.end)
+                      //     : null;
+                      const selectionBox = selection
+                        ? normalizeSelection(selection)
+                        : null;
+                      const isSelected =
+                        selection &&
+                        rowIndex >=
+                          Math.min(selection.startRow, selection.endRow) &&
+                        rowIndex <=
+                          Math.max(selection.startRow, selection.endRow) &&
+                        colIndex >=
+                          Math.min(selection.startCol, selection.endCol) &&
+                        colIndex <=
+                          Math.max(selection.startCol, selection.endCol);
+
+                      return (
+                        <div
+                          key={`${rowIndex}-${colIndex}`}
+                          className="touch-none select-none"
+                          style={{
+                            backgroundColor:
+                              getPixelColor(rowIndex, colIndex) ??
+                              ((rowIndex + colIndex) % 2 === 0
+                                ? "#f0f0f0"
+                                : "#ffffff"),
+                            ...(selectionBox
+                              ? getSelectionBorderStyle(
+                                  rowIndex,
+                                  colIndex,
+                                  selectionBox
+                                )
+                              : {}),
+                          }}
+                          onPointerDown={
+                            activeTool !== "pan"
+                              ? (e) => handlePointerDown(e, rowIndex, colIndex)
+                              : undefined
+                          }
+                        />
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -654,7 +1004,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           <div className="flex flex-col h-full max-h-[600px] overflow-hidden">
             <div className="flex-1 overflow-y-auto pr-1">
               <Toolbar
-                tools={tools}
                 title={title}
                 setTitle={setTitle}
                 activeTool={activeTool}
