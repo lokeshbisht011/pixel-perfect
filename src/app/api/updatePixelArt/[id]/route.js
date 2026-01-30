@@ -1,3 +1,7 @@
+import { authOptions } from "@/lib/authOptions";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+
 export async function PUT(req, { params }) {
   const session = await getServerSession(authOptions);
 

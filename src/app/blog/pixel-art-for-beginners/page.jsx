@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function PixelArtForBeginnersPage() {
   return (
-    <Layout>
+    
       <main className="relative min-h-screen bg-background text-foreground px-4 py-12 overflow-hidden">
         {/* Pixel Grid Background */}
         <div
@@ -199,6 +199,6 @@ export default function PixelArtForBeginnersPage() {
           </footer>
         </article>
       </main>
-    </Layout>
+    
   );
 }

@@ -39,7 +39,7 @@ export default function ProfilePage() {
   }, [username]);
 
   return (
-    <Layout>
+    
       <div className="md:container md:py-6 px-4 py-4">
         <ProfileHeaderSection username={username} />
 
@@ -66,6 +66,6 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    
   );
 }

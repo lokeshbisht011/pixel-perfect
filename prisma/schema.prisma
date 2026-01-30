@@ -58,6 +58,8 @@ model Profile {
   streaks       Streak[]
   badges        BadgeOnProfile[]
 
+  notifications Notification[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -216,4 +218,31 @@ model BadgeOnProfile {
   awardedAt DateTime @default(now())
 
   @@unique([profileId, badgeId])
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Receiver
+  profileId String   @db.ObjectId
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  // Type of notification
+  type      String   // LIKE | COMMENT | REMIX | FOLLOW | BADGE
+
+  // What this notification is about
+  entityId  String?  @db.ObjectId // pixelArtId | profileId | badgeId
+  entityType String? // "PIXEL_ART" | "PROFILE" | "BADGE"
+
+  // Who triggered it (batched likes)
+  actorProfileIds String[] @db.ObjectId
+
+  // Convenience
+  count     Int      @default(1)
+  read      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId, createdAt])
 }

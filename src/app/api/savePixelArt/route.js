@@ -1,3 +1,8 @@
+import { authOptions } from "@/lib/authOptions";
+import { calculateStreak } from "@/lib/streaks";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 

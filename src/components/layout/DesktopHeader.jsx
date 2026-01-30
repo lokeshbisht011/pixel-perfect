@@ -1,0 +1,91 @@
+import Link from "next/link";
+import { Bell, LogOut, Gamepad2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import NotificationDropdown from "../notifications/NotificationDropdown";
+import BoringAvatar from "boring-avatars";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const DesktopHeader = ({
+  profile,
+  session,
+  notifications,
+  unreadCount,
+  notificationsOpen,
+  setNotificationsOpen,
+  markAllRead,
+  signOut,
+}) => {
+  console.log(profile);
+  return (
+    <nav className="hidden md:flex items-center justify-between max-w-7xl mx-auto">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-3">
+        <Gamepad2 className="w-8 h-8 text-pixel-neon-pink" />
+        <h1 className="text-2xl font-bold font-mono">
+          <span className="text-pixel-neon-cyan">Pixel</span>
+          <span className="text-pixel-neon-pink">Art</span>
+          <span className="text-pixel-neon-green">Daily</span>
+        </h1>
+      </Link>
+
+      {/* Nav */}
+      <div className="flex items-center gap-6 font-mono">
+        <Link href="/">Today's Prompt</Link>
+        <Link href="/gallery">Gallery</Link>
+        <Link href="/create">Create</Link>
+        <Link href="/leaderboard">Leaderboard</Link>
+        <Link href="/blog">Blog</Link>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setNotificationsOpen((p) => !p)}
+          >
+            <Bell className="h-5 w-5 text-pixel-neon-pink" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+            )}
+          </Button>
+
+          {notificationsOpen && (
+            <NotificationDropdown
+              notifications={notifications}
+              onMarkAllRead={markAllRead}
+            />
+          )}
+        </div>
+
+        <Link href={`/${profile?.username}`}>
+          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary">
+            {profile?.avatarConfig ? (
+              <BoringAvatar
+                size={40}
+                name={profile.avatarConfig.seed}
+                variant={profile.avatarConfig.variant}
+                colors={profile.avatarConfig.colors}
+              />
+            ) : (
+              <BoringAvatar
+                size={40}
+                name={""}
+                variant={"beam"}
+                colors={["#00E5FF"]}
+              />
+            )}
+          </div>
+        </Link>
+
+        <Button variant="ghost" onClick={signOut}>
+          <LogOut className="w-4 h-4" />
+          Log out
+        </Button>
+      </div>
+    </nav>
+  );
+};
+
+export default DesktopHeader;

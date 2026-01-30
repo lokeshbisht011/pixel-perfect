@@ -135,14 +135,13 @@ const HeroSection = () => {
                 className="text-lg md:text-xl px-6 md:px-8 py-3 md:py-4"
               >
                 <Sparkles className="mr-2" />
-                Create Today’s Pixel Art
+                Start Creating
               </Button>
             </Link>
 
-            {/* Streak / community reinforcement */}
-            {/* <p className="mt-4 text-sm md:text-base text-pixel-neon-green font-mono font-bold">
-              Join 132 people today
-            </p> */}
+            <p className="mt-4 text-sm md:text-base text-pixel-neon-green font-mono font-bold">
+              {/* Join 132 people today */}
+            </p>
           </motion.div>
         </motion.div>
       </div>

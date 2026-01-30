@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function ChoosingPixelArtColorsPage() {
   return (
-    <Layout>
+    
       <main className="relative min-h-screen bg-background text-foreground px-4 py-12 overflow-hidden">
         {/* Pixel Grid Background */}
         <div
@@ -175,6 +175,6 @@ export default function ChoosingPixelArtColorsPage() {
           </footer>
         </article>
       </main>
-    </Layout>
+    
   );
 }

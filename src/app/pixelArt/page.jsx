@@ -53,9 +53,9 @@ export default function PixelArtPage({ searchParams }) {
   const id = searchParams?.id;
 
   return (
-    <Layout>
+    <>
       {/* Client component handles fetching, comments, likes, modals */}
       <PixelArtClient pixelArtId={id} />
-    </Layout>
+    </>
   );
 }

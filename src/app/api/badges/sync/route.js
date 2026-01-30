@@ -31,7 +31,7 @@ export async function POST() {
   };
 
   for (const badge of Object.values(BADGES)) {
-    if (existingBadgeIds.has(badge.id)) continue;
+    // if (existingBadgeIds.has(badge.id)) continue;
 
     const currentValue = statMap[badge.type] ?? 0;
     if (currentValue >= badge.requirement) {

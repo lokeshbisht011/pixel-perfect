@@ -145,24 +145,22 @@ const CreatePixelArt = () => {
       const result = await response.json();
 
       if (response.ok) {
-
         if (!pixelArtId) {
           setPixelArtId(result.pixelArt.id);
-        } 
-        
+        }
+
         toast({
           title: pixelArtId ? "Pixel Art Updated" : "Pixel Art Saved 🎨",
           description: dailyPromptId
             ? "Your art is live in today's gallery."
             : "Saved to your profile.",
-        }); 
+        });
 
-        clearDraft()
+        clearDraft();
 
         if (!pixelArtId || visibilityStatus === "PUBLIC") {
           await syncBadges();
         }
-
       } else {
         throw new Error(result.error || "Failed to save");
       }
@@ -181,30 +179,28 @@ const CreatePixelArt = () => {
   const countdownColor = isLastHour ? "text-red-600" : "text-green-600";
 
   return (
-    <Layout>
-      <motion.div
-        className="px-2 md:container py-2 md:py-8"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Pixel Art Canvas Section */}
-        <motion.div variants={itemVariants} className="flex-grow">
-          <PixelArtCanvas
-            onSave={handleSavePixelArt}
-            userId={session?.user?.id ?? ""}
-            prompt={prompt}
-          />
-        </motion.div>
-
-        <LoginModal
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-          reason="save-pixelArt"
-          callbackUrl="/create"
+    <motion.div
+      className="md:container py-2 md:py-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Pixel Art Canvas Section */}
+      <motion.div variants={itemVariants} className="flex-grow">
+        <PixelArtCanvas
+          onSave={handleSavePixelArt}
+          userId={session?.user?.id ?? ""}
+          prompt={prompt}
         />
       </motion.div>
-    </Layout>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        reason="save-pixelArt"
+        callbackUrl="/create"
+      />
+    </motion.div>
   );
 };
 

@@ -141,108 +141,104 @@ const PixelArtGallery = () => {
   };
 
   return (
-    <Layout>
-      <div className="p-4 md:container md:pt-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Pixel Art Gallery</h1>
-            <p className="text-muted-foreground mt-1">
-              Explore daily pixel art created by our community
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto items-start sm:items-center">
-            <form
-              onSubmit={handleSearch}
-              className="relative flex-1 w-full sm:w-auto"
-            >
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by prompt, creator, or tag..."
-                className="pl-8 w-full sm:w-auto"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search pixel arts"
-              />
-            </form>
-
-            {/* Calendar Picker */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {selectedDate
-                    ? format(selectedDate, "MMM dd, yyyy")
-                    : "Select Date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => setSelectedDate(date)}
-                  max={new Date()}
-                />
-              </PopoverContent>
-            </Popover>
-
-            {selectedDate && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setSelectedDate(null);
-                  setPixelArts([]);
-                  setHasMore(true);
-                  daysLoaded.current = 0;
-                }}
-              >
-                Clear
-              </Button>
-            )}
-          </div>
+    <div className="p-4 md:container md:pt-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Pixel Art Gallery</h1>
+          <p className="text-muted-foreground mt-1">
+            Explore daily pixel art created by our community
+          </p>
         </div>
 
-        {/* Pixel Arts */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          className="grid md:grid-cols-3 lg:grid-cols-4 gap-6"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-          }}
-        >
-          {!loading && pixelArts.length === 0 && (
-            <p className="text-center col-span-full text-muted-foreground">
-              No pixel arts found.
-            </p>
-          )}
-
-          {pixelArts.map((p) => (
-            <PixelArtCard
-              key={p.id}
-              pixelArt={p}
-              currentUserProfile={profile}
-              onPixelArtDeleted={handlePixelArtDeleted}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto items-start sm:items-center">
+          <form
+            onSubmit={handleSearch}
+            className="relative flex-1 w-full sm:w-auto"
+          >
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by prompt, creator, or tag..."
+              className="pl-8 w-full sm:w-auto"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search pixel arts"
             />
-          ))}
-        </motion.div>
+          </form>
 
-        {/* Loading / End */}
-        <div ref={observerTarget} className="py-8 text-center col-span-full">
-          {loading && (
-            <SectionSkeleton />
-          )}
-          {!hasMore && !selectedDate && pixelArts.length > 0 && (
-            <p className="text-muted-foreground mt-4">
-              You've reached the end of the gallery.
-            </p>
+          {/* Calendar Picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                {selectedDate
+                  ? format(selectedDate, "MMM dd, yyyy")
+                  : "Select Date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => setSelectedDate(date)}
+                max={new Date()}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {selectedDate && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setSelectedDate(null);
+                setPixelArts([]);
+                setHasMore(true);
+                daysLoaded.current = 0;
+              }}
+            >
+              Clear
+            </Button>
           )}
         </div>
       </div>
-    </Layout>
+
+      {/* Pixel Arts */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        className="grid md:grid-cols-3 lg:grid-cols-4 gap-6"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+        }}
+      >
+        {!loading && pixelArts.length === 0 && (
+          <p className="text-center col-span-full text-muted-foreground">
+            No pixel arts found.
+          </p>
+        )}
+
+        {pixelArts.map((p) => (
+          <PixelArtCard
+            key={p.id}
+            pixelArt={p}
+            currentUserProfile={profile}
+            onPixelArtDeleted={handlePixelArtDeleted}
+          />
+        ))}
+      </motion.div>
+
+      {/* Loading / End */}
+      <div ref={observerTarget} className="py-8 text-center col-span-full">
+        {loading && <SectionSkeleton />}
+        {!hasMore && !selectedDate && pixelArts.length > 0 && (
+          <p className="text-muted-foreground mt-4">
+            You've reached the end of the gallery.
+          </p>
+        )}
+      </div>
+    </div>
   );
 };
 

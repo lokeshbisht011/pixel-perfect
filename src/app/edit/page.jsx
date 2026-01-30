@@ -137,13 +137,13 @@ const PixelArtEditor = () => {
 
 const EditPixelArt = () => {
   return (
-    <Layout>
-      <div className="px-2 md:container py-2 md:py-8">
+    
+      <div className="md:container py-2 md:py-8">
         <Suspense fallback={<div>Loading...</div>}>
           <PixelArtEditor />
         </Suspense>
       </div>
-    </Layout>
+    
   );
 };
 

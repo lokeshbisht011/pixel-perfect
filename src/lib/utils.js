@@ -35,3 +35,26 @@ export const VISIBILITY_STATUS = Object.freeze({
 });
 
 export const STORAGE_KEY = "pixel-art-draft";
+
+export function renderNotificationText(n) {
+  const countText =
+    n.count > 1 ? `and ${n.count - 1} others ` : "";
+
+  switch (n.type) {
+    case "LIKE":
+      return `❤️ Someone ${countText}liked your pixel art`;
+    case "COMMENT":
+      return `💬 Someone ${countText}commented on your pixel art`;
+    case "REMIX":
+      return `🎮 Someone ${countText}remixed your pixel art`;
+    case "FOLLOW":
+      return `➕ Someone ${countText}followed you`;
+    default:
+      return "New notification";
+  }
+}
+
+export function getNotificationLink(n) {
+  if (n.entityId) return `/art/${n.entityId}`;
+  return "/notifications";
+}

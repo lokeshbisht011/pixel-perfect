@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Layout from '@/components/layout/Layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Flame, Award, Sparkles, Heart, Pencil, Timer } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import Layout from "@/components/layout/Layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Flame, Award, Sparkles, Heart, Pencil, Timer } from "lucide-react";
 import { useSession } from "next-auth/react";
-import LeaderboardTable from '@/components/leaderboard/LeaderboardTable';
+import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 
 const LeaderboardShimmer = () => (
   <div className="bg-card rounded-lg shadow-sm animate-pulse">
@@ -39,8 +39,8 @@ const containerVariants = {
 
 const Leaderboard = () => {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState('most-liked');
-  const [activeTimeframe, setActiveTimeframe] = useState('daily');
+  const [activeTab, setActiveTab] = useState("most-liked");
+  const [activeTimeframe, setActiveTimeframe] = useState("daily");
   const [leaders, setLeaders] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +49,9 @@ const Leaderboard = () => {
     const fetchLeaders = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/leaderboard?category=${activeTab}&timeframe=${activeTimeframe}`);
+        const res = await fetch(
+          `/api/leaderboard?category=${activeTab}&timeframe=${activeTimeframe}`
+        );
         const data = await res.json();
         setLeaders(data);
       } catch (error) {
@@ -59,7 +61,7 @@ const Leaderboard = () => {
         setLoading(false);
       }
     };
-    
+
     const handler = setTimeout(() => {
       fetchLeaders();
     }, 500); // Debounce to prevent multiple API calls on fast tab changes
@@ -69,23 +71,23 @@ const Leaderboard = () => {
 
   const getTableProps = () => {
     switch (activeTab) {
-      case 'most-liked':
+      case "most-liked":
         return {
-          valueLabel: 'Most Liked',
+          valueLabel: "Most Liked",
           icon: <Heart className="h-4 w-4 text-red-500" />,
-          dataKey: 'mostLikes',
+          dataKey: "mostLikes",
         };
-      case 'top-pixelArtists':
+      case "top-pixelArtists":
         return {
-          valueLabel: 'Submissions',
+          valueLabel: "Submissions",
           icon: <Pencil className="h-4 w-4 text-blue-500" />,
-          dataKey: 'submissions',
+          dataKey: "submissions",
         };
-      case 'most-active':
+      case "most-active":
         return {
-          valueLabel: 'Longest Streak',
+          valueLabel: "Longest Streak",
           icon: <Flame className="h-4 w-4 text-orange-500" />,
-          dataKey: 'streak',
+          dataKey: "streak",
         };
       default:
         return {};
@@ -95,74 +97,75 @@ const Leaderboard = () => {
   const { valueLabel, icon, dataKey } = getTableProps();
 
   return (
-    <Layout>
-      <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-6">Leaderboard</h1>
-        
-        <Tabs defaultValue="most-liked" onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="most-liked">
-              <div className="flex items-center gap-1">
-                <Heart className="h-4 w-4" />
-                <span>Most Liked</span>
+    <div className="md:container md:py-8 px-4 py-4 ">
+      <h1 className="text-3xl font-bold mb-6">Leaderboard</h1>
+
+      <Tabs defaultValue="most-liked" onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="most-liked">
+            <div className="flex items-center gap-1">
+              <Heart className="h-4 w-4" />
+              <span>Most Liked</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="top-pixelArtists">
+            <div className="flex items-center gap-1">
+              <Pencil className="h-4 w-4" />
+              <span>Top Pixel Artists</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="most-active">
+            <div className="flex items-center gap-1">
+              <Flame className="h-4 w-4" />
+              <span>Most Active</span>
+            </div>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab}>
+          <Tabs defaultValue="daily" onValueChange={setActiveTimeframe}>
+            <TabsList className="mb-6">
+              <TabsTrigger value="daily">Daily</TabsTrigger>
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              <TabsTrigger value="overall">Overall</TabsTrigger>
+            </TabsList>
+
+            <motion.div
+              key={`${activeTab}-${activeTimeframe}`}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="bg-card rounded-lg shadow-sm"
+            >
+              <div className="py-4 px-6 border-b">
+                <h2 className="text-xl font-semibold">{valueLabel}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {activeTimeframe === "daily" &&
+                    "Top users over the last 24 hours"}
+                  {activeTimeframe === "monthly" && "Top users this month"}
+                  {activeTimeframe === "overall" && "All-time top users"}
+                </p>
               </div>
-            </TabsTrigger>
-            <TabsTrigger value="top-pixelArtists">
-              <div className="flex items-center gap-1">
-                <Pencil className="h-4 w-4" />
-                <span>Top Pixel Artists</span>
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="most-active">
-              <div className="flex items-center gap-1">
-                <Flame className="h-4 w-4" />
-                <span>Most Active</span>
-              </div>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={activeTab}>
-            <Tabs defaultValue="daily" onValueChange={setActiveTimeframe}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="daily">Daily</TabsTrigger>
-                <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                <TabsTrigger value="overall">Overall</TabsTrigger>
-              </TabsList>
-              
-              <motion.div
-                key={`${activeTab}-${activeTimeframe}`}
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="bg-card rounded-lg shadow-sm"
-              >
-                <div className="py-4 px-6 border-b">
-                  <h2 className="text-xl font-semibold">{valueLabel}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {activeTimeframe === 'daily' && 'Top users over the last 24 hours'}
-                    {activeTimeframe === 'monthly' && 'Top users this month'}
-                    {activeTimeframe === 'overall' && 'All-time top users'}
+              {loading ? (
+                <LeaderboardShimmer />
+              ) : leaders && leaders.length > 0 ? (
+                <LeaderboardTable
+                  leaders={leaders}
+                  valueLabel={valueLabel}
+                  icon={icon}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    No data available for this category
                   </p>
                 </div>
-                {loading ? (
-                  <LeaderboardShimmer />
-                ) : leaders && leaders.length > 0 ? (
-                  <LeaderboardTable
-                    leaders={leaders}
-                    valueLabel={valueLabel}
-                    icon={icon}
-                  />
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No data available for this category</p>
-                  </div>
-                )}
-              </motion.div>
-            </Tabs>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </Layout>
+              )}
+            </motion.div>
+          </Tabs>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

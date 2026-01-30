@@ -14,7 +14,8 @@ const Index = () => {
   const { data: session } = useSession();
   const [profile, setProfile] = useState(null);
 
-  const { activeBadge, showNewBadgeModal, closeBadgeModal, syncBadges } = useBadges();
+  const { activeBadge, showNewBadgeModal, closeBadgeModal, syncBadges } =
+    useBadges();
   const { status } = useSession();
   const hasSyncedRef = useRef(false);
 
@@ -43,7 +44,7 @@ const Index = () => {
   }, [session]);
 
   return (
-    <Layout>
+    <>
       <NewBadgeModal
         isOpen={showNewBadgeModal}
         badge={activeBadge}
@@ -63,7 +64,7 @@ const Index = () => {
           <HowItWorks />
         </motion.div>
       </div>
-    </Layout>
+    </>
   );
 };
 

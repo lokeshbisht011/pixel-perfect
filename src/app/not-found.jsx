@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function NotFoundPage() {
   return (
-    <Layout>
+    
       <main className="relative min-h-screen bg-background text-foreground px-4 py-16 overflow-hidden flex justify-center">
         {/* Pixel grid background */}
         <div
@@ -72,6 +72,6 @@ export default function NotFoundPage() {
           </p>
         </section>
       </main>
-    </Layout>
+    
   );
 }

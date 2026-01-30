@@ -47,8 +47,9 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     end: null,
     offset: { row: 0, col: 0 },
   });
-
   const [selectionData, setSelectionData] = useState(null);
+  const [previewGrid, setPreviewGrid] = useState(null);
+  const [canPaste, setCanPaste] = useState(false);
 
   const panStartRef = useRef({ x: 0, y: 0 });
   const panOriginRef = useRef({ x: 0, y: 0 });
@@ -185,6 +186,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       return next;
     });
   };
+
   const handleFill = (startRow, startCol) => {
     const fillColor =
       activeToolRef.current === "eraser" ? "#ffffff" : activeColorRef.current;
@@ -226,37 +228,45 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     }
 
     if (activeTool === "select") {
-      if (
-        selection.mode === "selected" &&
-        isInsideSelection(row, col, selection)
-      ) {
-        setSelection((prev) => ({
-          ...prev,
-          mode: "moving",
-          offset: {
-            row: row - prev.start.row,
-            col: col - prev.start.col,
-          },
-        }));
+      if (selection.mode === "selected" && isInsideSelection(row, col)) {
+        setSelection((prev) => {
+          if (!prev.currentBox) return prev;
+
+          return {
+            ...prev,
+            mode: "moving",
+            offset: {
+              row: row - prev.currentBox.top,
+              col: col - prev.currentBox.left,
+            },
+          };
+        });
+
         const box = normalizeSelection(selection);
         if (!box || !selectionData) return;
 
         // 1️⃣ Create base grid snapshot
-        const base = fullGrid.map((r) => [...r]);
+        const { currentBox } = selection;
 
-        // 2️⃣ Remove selected pixels from base grid
-        selectionData.forEach((rowData, r) => {
-          rowData.forEach((color, c) => {
-            if (color == null) return;
+        // 1️⃣ Base grid snapshot
+        const base =
+          previewGrid?.map((r) => [...r]) ?? fullGrid.map((r) => [...r]);
 
-            const tr = box.top + r;
-            const tc = box.left + c;
+        // 2️⃣ Remove pixels ONLY if this is NOT a paste
+        if (selectionData) {
+          selectionData.forEach((rowData, r) => {
+            rowData.forEach((color, c) => {
+              if (color == null) return;
 
-            if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
-              base[tr][tc] = null;
-            }
+              const tr = currentBox.top + r;
+              const tc = currentBox.left + c;
+
+              if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
+                base[tr][tc] = null;
+              }
+            });
           });
-        });
+        }
 
         baseGridRef.current = base;
 
@@ -266,12 +276,24 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
         return;
       }
 
-      lastHoverCellRef.current = { row, col };
+      if (previewGrid) {
+        commitSelection();
+      }
 
       setSelection({
         mode: "selecting",
-        start: { row, col },
-        end: { row, col },
+        startBox: {
+          top: row,
+          left: col,
+          bottom: row,
+          right: col,
+        },
+        currentBox: {
+          top: row,
+          left: col,
+          bottom: row,
+          right: col,
+        },
       });
 
       return;
@@ -299,11 +321,19 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     if (activeTool === "select") {
       if (selection.mode === "selecting") {
-        setSelection((prev) => ({
-          ...prev,
-          end: { row, col },
-        }));
-        return;
+        setSelection((prev) => {
+          const sb = prev.startBox;
+
+          return {
+            ...prev,
+            currentBox: {
+              top: Math.min(sb.top, row),
+              left: Math.min(sb.left, col),
+              bottom: Math.max(sb.bottom, row),
+              right: Math.max(sb.right, col),
+            },
+          };
+        });
       }
       if (selection.mode === "moving" && selection.offset && selectionData) {
         const box = normalizeSelection(selection);
@@ -319,35 +349,45 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           right: newLeft + (box.right - box.left),
         };
 
-        setFullGrid(() => {
-          if (!baseGridRef.current || !selectionData) return fullGrid;
+        const next = baseGridRef.current.map((r) => [...r]);
 
-          const next = baseGridRef.current.map((r) => [...r]);
+        // Draw selectionData at new position (non-null only)
+        selectionData.forEach((rowData, r) => {
+          rowData.forEach((color, c) => {
+            if (color == null) return;
 
-          // Draw selectionData at new position (non-null only)
-          selectionData.forEach((rowData, r) => {
-            rowData.forEach((color, c) => {
-              if (color == null) return;
+            const tr = newTop + r;
+            const tc = newLeft + c;
 
-              const tr = newTop + r;
-              const tc = newLeft + c;
-
-              if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
-                next[tr][tc] = color;
-              }
-            });
+            if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
+              next[tr][tc] = color;
+            }
           });
-
-          return next;
         });
+
+        setPreviewGrid(next);
 
         lastSelectionBoxRef.current = newBox;
 
-        setSelection((prev) => ({
-          ...prev,
-          start: { row: newTop, col: newLeft },
-          end: { row: newBox.bottom, col: newBox.right },
-        }));
+        setSelection((prev) => {
+          if (!prev.sourceBox) return prev;
+
+          const newTop = row - prev.offset.row;
+          const newLeft = col - prev.offset.col;
+
+          const height = prev.sourceBox.bottom - prev.sourceBox.top;
+          const width = prev.sourceBox.right - prev.sourceBox.left;
+
+          return {
+            ...prev,
+            currentBox: {
+              top: newTop,
+              left: newLeft,
+              bottom: newTop + height,
+              right: newLeft + width,
+            },
+          };
+        });
 
         return;
       }
@@ -367,27 +407,30 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     if (activeTool === "select") {
       if (selection.mode === "selecting") {
-        setSelection((prev) => ({
-          ...prev,
-          mode: "selected",
-        }));
-
         const box = normalizeSelection(selection);
         if (!box) return;
 
-        const data = fullGrid
-          .slice(box.top, box.bottom + 1)
-          .map((row) => row.slice(box.left, box.right + 1));
+        const data = [];
+
+        for (let r = box.top; r <= box.bottom; r++) {
+          const row = [];
+          for (let c = box.left; c <= box.right; c++) {
+            row.push(getVisibleCell(r, c));
+          }
+          data.push(row);
+        }
+
+        setSelection({
+          mode: "selected",
+          sourceBox: box,
+          currentBox: box,
+          offset: { row: 0, col: 0 },
+        });
 
         setSelectionData(data);
         return;
       }
       if (selection.mode === "moving") {
-        saveCanvasState({
-          grid: fullGridRef.current,
-          gridSize,
-        });
-
         baseGridRef.current = null;
         lastSelectionBoxRef.current = null;
 
@@ -476,22 +519,28 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   // select tool methods
 
   const normalizeSelection = () => {
-    if (!selection.start || !selection.end) return null;
-
-    return {
-      top: Math.min(selection.start.row, selection.end.row),
-      left: Math.min(selection.start.col, selection.end.col),
-      bottom: Math.max(selection.start.row, selection.end.row),
-      right: Math.max(selection.start.col, selection.end.col),
-    };
+    if (!selection.currentBox) return null;
+    return selection.currentBox;
   };
 
-  const isInsideSelection = (row, col, sel) => {
-    const box = normalizeSelection(sel);
+  const isInsideSelection = (row, col) => {
+    const box = normalizeSelection();
     if (!box) return false;
 
     return (
       row >= box.top && row <= box.bottom && col >= box.left && col <= box.right
+    );
+  };
+
+  const isInSelectionSource = (row, col) => {
+    const { sourceBox } = selection;
+    if (!sourceBox) return false;
+
+    return (
+      row >= sourceBox.top &&
+      row <= sourceBox.bottom &&
+      col >= sourceBox.left &&
+      col <= sourceBox.right
     );
   };
 
@@ -526,38 +575,89 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   };
 
   const getPixelColor = (row, col) => {
+    // 1️⃣ Preview grid always wins
+    if (previewGrid) {
+      const p = previewGrid[row]?.[col];
+      if (p !== null && p !== undefined) {
+        return p;
+      }
+    }
+
+    // 2️⃣ Render moved selection
     if (selection.mode === "selected" && selectionData) {
       const box = normalizeSelection();
-      if (!box) return fullGrid[row][col];
+      if (box) {
+        const { top, left, bottom, right } = box;
 
-      const { top, left, bottom, right } = box;
+        if (row >= top && row <= bottom && col >= left && col <= right) {
+          const sr = row - top;
+          const sc = col - left;
+          const color = selectionData[sr]?.[sc];
 
-      if (row >= top && row <= bottom && col >= left && col <= right) {
-        const sr = row - top;
-        const sc = col - left;
-        const color = selectionData[sr]?.[sc];
-
-        // 👇 KEY CHANGE: treat null as transparent
-        if (color != null) {
-          return color;
+          if (color != null) {
+            return color;
+          }
         }
       }
     }
 
+    // 3️⃣ Hide original pixels while selection is active
+    if (isInSelectionSource(row, col)) {
+      return null; // transparent
+    }
+
+    // 4️⃣ Fall back to committed grid
     return fullGrid[row][col];
+  };
+
+  const getVisibleCell = (row, col) => {
+    const previewCell = previewGrid?.[row]?.[col];
+    if (previewCell !== null && previewCell !== undefined) {
+      return previewCell;
+    }
+    return fullGrid[row]?.[col] ?? null;
+  };
+
+  const getVisibleGrid = () => {
+    if (!previewGrid) return fullGrid;
+  
+    return previewGrid.map((row, r) =>
+      row.map((cell, c) => (cell !== null ? cell : fullGrid[r][c]))
+    );
+  };
+  
+  const commitSelection = () => {
+    if (!previewGrid || !selectionData) return;
+
+    setFullGrid(previewGrid);
+    saveCanvasState({ grid: previewGrid, gridSize });
+
+    setPreviewGrid(null);
+    setSelectionData(null);
+    setCanPaste(false);
+
+    setSelection({
+      mode: "idle",
+      sourceBox: null,
+      currentBox: null,
+      offset: null,
+    });
   };
 
   const handleCopy = () => {
     if (selection.mode !== "selected") return;
 
-    const box = normalizeSelection(selection);
+    const box = normalizeSelection();
     if (!box) return;
 
-    const data = fullGrid
-      .slice(box.top, box.bottom + 1)
-      .map((row) => row.slice(box.left, box.right + 1));
+    const sourceGrid = getVisibleGrid();
+
+    const data = sourceGrid
+    .slice(box.top, box.bottom + 1)
+    .map((row) => row.slice(box.left, box.right + 1));
 
     setSelectionData(data);
+    setCanPaste(true);
   };
 
   const handleCut = () => {
@@ -566,11 +666,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     const box = normalizeSelection(selection);
     if (!box) return;
 
-    const data = fullGrid
+    const sourceGrid = getVisibleGrid();
+
+    const data = sourceGrid
       .slice(box.top, box.bottom + 1)
       .map((row) => row.slice(box.left, box.right + 1));
 
     setSelectionData(data);
+    setCanPaste(true);
 
     const nextGrid = fullGrid.map((r) => [...r]);
 
@@ -585,26 +688,75 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
     setSelection({
       mode: "idle",
-      start: null,
-      end: null,
+      sourceBox: null,
+      currentBox: null,
+      offset: null,
     });
+
+    setPreviewGrid(null);
   };
 
   const handlePaste = () => {
     if (!selectionData) return;
 
-    // const { row, col } = lastHoverCellRef.current;
+    const base = previewGrid?.map((r) => [...r]) ?? fullGrid.map((r) => [...r]);
+
+    const next = base.map((r) => [...r]);
+
+    selectionData.forEach((row, r) => {
+      row.forEach((color, c) => {
+        if (color == null) return;
+
+        const tr = r;
+        const tc = c;
+
+        if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize) {
+          next[tr][tc] = color;
+        }
+      });
+    });
+
+    baseGridRef.current = base;
+
+    // 4️⃣ Apply preview + selection
+    setPreviewGrid(next);
 
     setSelection({
       mode: "selected",
-      start: { row: 0, col: 0 },
-      end: {
-        row: selectionData.length - 1,
-        col: selectionData[0].length - 1,
+
+      // ⛔️ no source pixels to mask (clipboard paste)
+      sourceBox: {
+        top: 0,
+        left: 0,
+        bottom: selectionData.length - 1,
+        right: selectionData[0].length - 1,
       },
+
+      // 👇 floating selection starts at top-left (0,0)
+      currentBox: {
+        top: 0,
+        left: 0,
+        bottom: selectionData.length - 1,
+        right: selectionData[0].length - 1,
+      },
+
       offset: { row: 0, col: 0 },
     });
   };
+
+  // const handleCancel = () => {
+  //   if (!previewGrid || !selectionData) return;
+
+  //   setPreviewGrid(null);
+  //   setSelectionData(null);
+
+  //   setSelection({
+  //     mode: "idle",
+  //     start: null,
+  //     end: null,
+  //     offset: null,
+  //   });
+  // };
 
   const handleZoomChange = (nextZoom) => {
     setPanOffset((prev) => {
@@ -644,11 +796,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     const newGrid = createEmptyGrid(MAX_GRID_SIZE);
     setFullGrid(newGrid);
     saveCanvasState({ grid: newGrid, gridSize: sliderGridSize }, true);
+    setPreviewGrid(null);
+    setSelectionData(null);
+    setCanPaste(false);
     setSelection({
       mode: "idle",
-      start: null,
-      end: null,
-      offset: { row: 0, col: 0 },
+      sourceBox: null,
+      currentBox: null,
+      offset: null,
     });
   };
 
@@ -761,10 +916,14 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     const el = gridRef.current;
 
     if (activeTool !== "select") {
+      if (previewGrid) {
+        commitSelection();
+      }
       setSelection({
-        mode: "idle",
-        start: null,
-        end: null,
+        mode: "selected",
+        sourceBox: null,
+        currentBox: null,
+        offset: null,
       });
     }
 
@@ -822,7 +981,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
           setActiveTool("brush");
           //TODO add if condition
           setSelection(null);
-          setIsDraggingSelection(false);
           break;
 
         case "b":
@@ -884,17 +1042,24 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
       >
         <div className="grid lg:grid-cols-3 gap-2 md:gap-6 items-stretch">
           {activeTool === "select" && (
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-background border rounded-lg p-2 shadow">
-              <Button size="sm" variant={"pixel"} onClick={handleCopy}>Copy</Button>
-              <Button size="sm" variant={"pixel"} onClick={handleCut}>Cut</Button>
-              <Button size="sm" variant={"pixel"} onClick={handlePaste}>Paste</Button>
-              <Button size="sm" variant={"pixel"}
-                onClick={() =>
-                  setSelection({ mode: "idle", start: null, end: null })
-                }
-              >
-                Cancel
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-background border rounded-lg p-2 shadow z-10">
+              <Button size="sm" variant={"pixel"} onClick={handleCopy}>
+                Copy
               </Button>
+              <Button size="sm" variant={"pixel"} onClick={handleCut}>
+                Cut
+              </Button>
+              <Button
+                size="sm"
+                variant={"pixel"}
+                onClick={handlePaste}
+                disabled={!canPaste}
+              >
+                Paste
+              </Button>
+              {/* <Button size="sm" variant={"pixel"} onClick={handleCancel}>
+                Cancel
+              </Button> */}
             </div>
           )}
 
@@ -957,17 +1122,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                       const selectionBox = selection
                         ? normalizeSelection(selection)
                         : null;
-                      const isSelected =
-                        selection &&
-                        rowIndex >=
-                          Math.min(selection.startRow, selection.endRow) &&
-                        rowIndex <=
-                          Math.max(selection.startRow, selection.endRow) &&
-                        colIndex >=
-                          Math.min(selection.startCol, selection.endCol) &&
-                        colIndex <=
-                          Math.max(selection.startCol, selection.endCol);
-
                       return (
                         <div
                           key={`${rowIndex}-${colIndex}`}

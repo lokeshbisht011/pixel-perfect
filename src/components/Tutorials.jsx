@@ -12,7 +12,7 @@ export const metadata = {
 
 export default function PixelArtPikachuPage() {
   return (
-    <Layout>
+    
       <main className="relative min-h-screen bg-background text-foreground px-4 py-12 overflow-hidden">
         <div
           aria-hidden
@@ -117,6 +117,6 @@ export default function PixelArtPikachuPage() {
           </footer>
         </article>
       </main>
-    </Layout>
+    
   );
 }
