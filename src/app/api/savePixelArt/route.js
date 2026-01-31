@@ -1,4 +1,5 @@
 import { authOptions } from "@/lib/authOptions";
+import prisma from "@/lib/prisma";
 import { calculateStreak } from "@/lib/streaks";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";

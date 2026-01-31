@@ -1,14 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
+import { Gamepad2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  FaFacebook,
-  FaInstagram,
-  FaTwitter,
-  FaYoutube,
-} from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -91,7 +86,7 @@ const Footer = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="w-12 h-12 bg-gradient-main rounded-sm flex items-center justify-center">
-                <div className="w-8 h-8 bg-white rounded-sm"></div>
+                <Gamepad2 className="w-8 h-8 text-pixel-neon-pink" />
               </div>
               <h3 className="text-2xl font-bold font-mono">
                 <span className="text-pixel-neon-cyan">Pixel</span>
