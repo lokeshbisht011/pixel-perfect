@@ -15,7 +15,6 @@ const DesktopHeader = ({
   markAllRead,
   signOut,
 }) => {
-  console.log(profile);
   return (
     <nav className="hidden md:flex items-center justify-between max-w-7xl mx-auto">
       {/* Logo */}

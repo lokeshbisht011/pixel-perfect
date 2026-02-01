@@ -177,8 +177,12 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     setFullGrid((prev) => {
       const next = prev.map((r) => [...r]);
 
-      const newColor =
-        activeToolRef.current === "eraser" ? "#ffffff" : activeColorRef.current;
+      if (activeToolRef.current === "eraser") {
+        next[row][col] = null;
+        return next;
+      }
+
+      const newColor = activeColorRef.current;
 
       if (next[row][col] === newColor) return prev;
 
@@ -620,12 +624,12 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
 
   const getVisibleGrid = () => {
     if (!previewGrid) return fullGrid;
-  
+
     return previewGrid.map((row, r) =>
       row.map((cell, c) => (cell !== null ? cell : fullGrid[r][c]))
     );
   };
-  
+
   const commitSelection = () => {
     if (!previewGrid || !selectionData) return;
 
@@ -653,8 +657,8 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     const sourceGrid = getVisibleGrid();
 
     const data = sourceGrid
-    .slice(box.top, box.bottom + 1)
-    .map((row) => row.slice(box.left, box.right + 1));
+      .slice(box.top, box.bottom + 1)
+      .map((row) => row.slice(box.left, box.right + 1));
 
     setSelectionData(data);
     setCanPaste(true);
@@ -928,28 +932,30 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
     }
 
     if (isEyedropperActive) {
-      el.style.cursor = "copy";
+      el.style.cursor = "url('/cursors/eyedropper.png') 24 24, crosshair";
       return;
     }
 
     switch (activeTool) {
       case "select":
-        el.style.cursor = "crosshair";
+        el.style.cursor = "url('/cursors/select.png') 24 28, crosshair";
         break;
 
       case "pan":
-        el.style.cursor = isPanning ? "grabbing" : "grab";
+        el.style.cursor = "url('/cursors/move.png') 28 28, crosshair";
         break;
 
       case "eraser":
-        el.style.cursor = "not-allowed";
+        el.style.cursor = "url('/cursors/eraser.png') 24 28, crosshair";
         break;
 
       case "fill":
-        el.style.cursor = "cell";
+        el.style.cursor = "url('/cursors/fill.png') 24 24, crosshair";
         break;
 
       case "brush":
+        el.style.cursor = "url('/cursors/brush.png') 28 28, crosshair";
+        break;
       default:
         el.style.cursor = "crosshair";
         break;
