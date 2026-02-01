@@ -93,8 +93,6 @@ export async function GET(request) {
       take: limit,
     });
 
-    console.log(pixelArts);
-
     const result = pixelArts.map((art) => ({
       id: art.id,
       imageUrl: art.imageUrl,

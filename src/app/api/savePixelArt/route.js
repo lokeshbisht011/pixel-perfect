@@ -59,7 +59,7 @@ export async function POST(req) {
           pixelArtsCount: { increment: 1 },
           ...streakUpdate,
           ...(dailyPromptId
-            ? { dailypromptParticipation: { increment: 1 } }
+            ? { dailyPromptParticipationCount: { increment: 1 } }
             : {}),
         },
       }),
