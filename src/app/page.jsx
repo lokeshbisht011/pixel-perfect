@@ -2,8 +2,6 @@
 import { motion } from "framer-motion";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
-import FloatingPixelIcons from "@/components/FloatingPixelIcons";
-import Layout from "@/components/layout/Layout";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import PixelArtGallery from "@/components/PixelArtGallery";
