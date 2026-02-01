@@ -16,9 +16,15 @@ import { FaFacebookF, FaTwitter } from "react-icons/fa";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react"; // Reusing Loader2 for consistency
 
-const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackUrl = "/" }) => {
+const LoginModal = ({
+  isOpen,
+  onClose,
+  initialMode = "signup",
+  reason,
+  callbackUrl = "/",
+}) => {
   const [mode, setMode] = useState(initialMode);
-  const [loading, setLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState(null);
 
   useEffect(() => {
     setMode(initialMode);
@@ -41,10 +47,11 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
 
   const handleLogin = async (provider) => {
     try {
-      setLoading(true);
+      setLoadingProvider(provider);
+
       const result = await signIn(provider, {
         redirect: false,
-        callbackUrl
+        callbackUrl,
       });
 
       if (result?.error) {
@@ -57,7 +64,7 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
       console.error(error);
       toast.error("Something went wrong");
     } finally {
-      setLoading(false);
+      setLoadingProvider(null);
     }
   };
 
@@ -79,12 +86,12 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
           <div className="flex flex-col gap-3 mt-6">
             <Button
               onClick={() => handleLogin("google")}
-              disabled={loading}
-              variant="outline" // Use outline to keep the Google icon visible
+              disabled={loadingProvider !== null}
+              variant="outline"
               className="flex items-center justify-center gap-2 text-foreground hover:bg-accent hover:text-accent-foreground font-mono"
             >
               <FcGoogle className="h-5 w-5" />
-              {loading ? (
+              {loadingProvider === "google" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : mode === "signup" ? (
                 "Sign up with Google"
@@ -96,12 +103,12 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
             {/* Using theme variants for Facebook/Twitter */}
             <Button
               onClick={() => handleLogin("facebook")}
-              disabled={loading}
+              disabled={loadingProvider !== null}
               variant="pixel" // Themed button style
               className="flex items-center justify-center gap-2 font-mono"
             >
               <FaFacebookF className="h-5 w-5" />
-              {loading ? (
+              {loadingProvider === "facebook" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : mode === "signup" ? (
                 "Sign up with Facebook"
@@ -112,12 +119,12 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
 
             <Button
               onClick={() => handleLogin("twitter")}
-              disabled={loading}
+              disabled={loadingProvider !== null}
               variant="neon" // Flashy themed button style
               className="flex items-center justify-center gap-2 font-mono"
             >
               <FaTwitter className="h-5 w-5" />
-              {loading ? (
+              {loadingProvider === "twitter" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : mode === "signup" ? (
                 "Sign up with X (Twitter)"
@@ -130,15 +137,13 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
           <DialogFooter className="mt-6 flex flex-col justify-center gap-2">
             <p className="text-sm text-muted-foreground text-center font-mono">
               By signing in, you agree to our{" "}
-              <a
-                href="/terms"
-                className="text-pixel-neon-cyan hover:underline"
-              >
+              <a href="/terms" target="blank" className="text-pixel-neon-cyan hover:underline">
                 Terms of Service
               </a>{" "}
               and{" "}
               <a
                 href="/privacy"
+                target="blank"
                 className="text-pixel-neon-cyan hover:underline"
               >
                 Privacy Policy
@@ -147,7 +152,7 @@ const LoginModal = ({ isOpen, onClose, initialMode = "signup", reason, callbackU
             </p>
             {mode === "signin" ? (
               <p className="text-sm text-foreground text-center font-mono">
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <button
                   onClick={() => setMode("signup")}
                   className="text-pixel-neon-pink hover:underline"

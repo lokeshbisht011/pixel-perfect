@@ -41,26 +41,25 @@ const Footer = () => {
       links: [
         { name: "Gallery", href: "/gallery" },
         { name: "Leaderboard", href: "/leaderboard" },
-        { name: "Challenges", href: "#challenges" },
-        { name: "Discord", href: "#discord" },
+        { name: "Blog", href: "/blog" },
       ],
     },
     {
       title: "Create",
       links: [
         { name: "PixelArt Editor", href: "/create" },
-        { name: "Tutorials", href: "#tutorials" },
-        { name: "Tips & Tricks", href: "#tips" },
-        { name: "Resources", href: "#resources" },
+        { name: "Tutorials", href: "" },
+        { name: "Tips & Tricks", href: "" },
+        { name: "Resources", href: "" },
       ],
     },
     {
       title: "Support",
       links: [
-        { name: "Help Center", href: "#help" },
-        { name: "Contact Us", href: "#contact" },
-        { name: "Privacy", href: "#privacy" },
-        { name: "Terms", href: "#terms" },
+        { name: "About Us", href: "/about" },
+        { name: "Contact Us", href: "/contact" },
+        { name: "Privacy", href: "/privacy" },
+        { name: "Terms", href: "/terms" },
       ],
     },
   ];

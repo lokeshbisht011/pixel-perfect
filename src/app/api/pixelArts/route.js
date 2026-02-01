@@ -34,8 +34,8 @@ export async function GET(request) {
       });
 
       whereCondition.AND = {
-        dailyPromptId: dailyPrompt.id
-      }
+        dailyPromptId: dailyPrompt.id,
+      };
     }
 
     // Apply search query if provided
@@ -62,6 +62,19 @@ export async function GET(request) {
         commentsCount: true,
         title: true,
         canRemix: true,
+        remixCount: true,
+        originalArtId: true,
+        originalArt: {
+          select: {
+            title: true,
+            profile: {
+              select: {
+                username: true,
+                avatarConfig: true,
+              },
+            },
+          },
+        },
         profile: {
           select: {
             id: true,
@@ -89,8 +102,19 @@ export async function GET(request) {
       likesCount: art.likesCount,
       commentsCount: art.commentsCount,
       canRemix: art.canRemix,
+      remixCount: art.remixCount,
       title: art.title,
       profile: art.profile,
+      originalArt: art.originalArtId
+        ? {
+            id: art.originalArtId,
+            title: art.originalArt.title,
+            profile: {
+              username: art.originalArt.profile.username,
+              avatarConfig: art.originalArt.profile.avatarConfig,
+            },
+          }
+        : null,
       likedByMe: currentProfileId ? art.likes.length > 0 : false,
     }));
 

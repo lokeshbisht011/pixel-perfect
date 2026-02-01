@@ -32,7 +32,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [title, setTitle] = useState(prompt?.prompt || "Untitled");
+  const [title, setTitle] = useState(pixelArt?.title || prompt?.prompt || "Untitled");
   const [submitToTodaysFeed, setSubmitToTodaysFeed] = useState(true);
   const [makePrivate, setMakePrivate] = useState(false);
   const [canRemix, setCanRemix] = useState(true);
@@ -950,7 +950,7 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
         break;
 
       case "fill":
-        el.style.cursor = "url('/cursors/fill.png') 24 24, crosshair";
+        el.style.cursor = "url('/cursors/fill.png') 24 24, crosshair";//todo make it better
         break;
 
       case "brush":
@@ -1119,12 +1119,6 @@ const PixelArtCanvas = ({ onSave, pixelArt, prompt }) => {
                 >
                   {displayGrid.map((row, rowIndex) =>
                     row.map((color, colIndex) => {
-                      // const selectionBox =
-                      //   selection.mode !== "idle" &&
-                      //   selection.start &&
-                      //   selection.end
-                      //     ? normalizeSelection(selection.start, selection.end)
-                      //     : null;
                       const selectionBox = selection
                         ? normalizeSelection(selection)
                         : null;

@@ -22,7 +22,6 @@ const HeroSection = () => {
         });
         if (!res.ok) return;
         const data = await res.json();
-        console.log(data);
         setPrompt(data);
       } catch (err) {
         console.error(err);

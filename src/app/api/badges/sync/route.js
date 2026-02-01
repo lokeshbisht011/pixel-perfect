@@ -28,10 +28,13 @@ export async function POST() {
     streak: profile.currentStreak,
     pixel_arts_liked: profile.pixelArtsLikedCount,
     likes_received: profile.likesReceivedCount,
+    remixes_made: profile.remixesMadeCount,
+    remixes_received: profile.remixesReceivedCount,
+    daily_prompt_participation: profile.dailyPromptParticipationCount
   };
 
   for (const badge of Object.values(BADGES)) {
-    // if (existingBadgeIds.has(badge.id)) continue;
+    if (existingBadgeIds.has(badge.id)) continue;
 
     const currentValue = statMap[badge.type] ?? 0;
     if (currentValue >= badge.requirement) {

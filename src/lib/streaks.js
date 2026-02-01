@@ -5,10 +5,11 @@ export function calculateStreak({
   currentStreak,
   maxStreakCount,
   now = new Date(),
+  isActive = false,
 }) {
   const today = startOfDay(now);
 
-  let newCurrentStreak = 1;
+  let newCurrentStreak = currentStreak;
 
   if (lastActivity) {
     const lastDay = startOfDay(lastActivity);
@@ -17,11 +18,17 @@ export function calculateStreak({
     if (diffDays === 0) {
       // Already active today
       newCurrentStreak = currentStreak;
-    } else if (diffDays === 1) {
-      // Continue streak
+    } else if (diffDays === 1 && isActive) {
+      // Continue streak only if user was active today
       newCurrentStreak = currentStreak + 1;
+    } else if (diffDays > 1) {
+      // Streak broken
+      newCurrentStreak = 0;
     }
-    // else → reset to 1
+    // else diffDays < 0 → future date, ignore
+  } else if (isActive) {
+    // first ever activity
+    newCurrentStreak = 1;
   }
 
   const newMaxStreakCount = Math.max(maxStreakCount, newCurrentStreak);
@@ -29,6 +36,6 @@ export function calculateStreak({
   return {
     currentStreak: newCurrentStreak,
     maxStreakCount: newMaxStreakCount,
-    lastActivity: now,
+    lastActivity: isActive ? now : lastActivity, // only update if active
   };
 }

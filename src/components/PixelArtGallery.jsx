@@ -155,9 +155,9 @@ const PixelArtGallery = ({ profile }) => {
         >
           <Link href="/gallery">
             <Button
-              variant="retro"
+              variant="secondary"
               size="xl"
-              className="font-mono text-xl px-12"
+              className="font-mono text-xl p-4"
             >
               ENTER FULL GALLERY
             </Button>

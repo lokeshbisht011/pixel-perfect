@@ -5,6 +5,20 @@ import BadgeCard from "@/components/profile/BadgeCard";
 import { useBadges } from "@/hooks/useBadges";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Helper to get highest tier per type
+function getHighestPerType(badges) {
+  const map = new Map();
+
+  badges.forEach((b) => {
+    const key = b.type;
+    if (!map.has(key) || b.tier > map.get(key).tier) {
+      map.set(key, b);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
 export default function ProfileBadgesSection() {
   const { badges, loading } = useBadges();
 
@@ -17,8 +31,9 @@ export default function ProfileBadgesSection() {
     );
   }
 
-  const earned = badges.filter((b) => b.isEarned);
-  const inProgress = badges.filter((b) => !b.isEarned);
+  // Filter earned / in-progress badges
+  const earned = getHighestPerType(badges.filter((b) => b.isEarned));
+  const inProgress = getHighestPerType(badges.filter((b) => !b.isEarned));
 
   return (
     <div className="space-y-10 mt-4">

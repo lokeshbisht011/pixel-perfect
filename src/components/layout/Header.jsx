@@ -9,7 +9,7 @@ import { useSession, signOut } from "next-auth/react";
 import LoginModal from "../LoginModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BoringAvatar from "boring-avatars";
-import { useNotifications } from "@/hooks/useNotifications";
+// import { useNotifications } from "@/hooks/useNotifications";
 import NotificationDropdown from "../notifications/NotificationDropdown";
 import DesktopHeader from "./DesktopHeader";
 import MobileHeader from "./MobileHeader";
@@ -38,8 +38,20 @@ const Header = ({ profile }) => {
     setLoginModal({ ...loginModal, isOpen: false });
   };
 
-  const { notifications, unreadCount, markAllRead } = useNotifications();
+  const { notifications, unreadCount, markAllRead } = {
+    notifications: [],
+    unreadCount: 0,
+    markAllRead: () => {},
+  };
 
+  // const notificationState = isLoggedIn ? useNotifications() : {
+  //   notifications: [],
+  //   unreadCount: 0,
+  //   markAllRead: () => {},
+  // };
+  
+  // const { notifications, unreadCount, markAllRead } = notificationState;
+  
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const sharedProps = {
@@ -52,6 +64,9 @@ const Header = ({ profile }) => {
     setMobileMenuOpen,
     markAllRead,
     signOut,
+    handleLoginClick,
+    handleSignupClick,
+    handleCloseModal
   };
 
   return (
@@ -95,7 +110,7 @@ const Header = ({ profile }) => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-4 py-3 hover:bg-muted"
               >
-                Today’s Prompt
+                Today's Prompt
               </Link>
 
               <Link

@@ -207,25 +207,34 @@ export default function ProfileHeaderSection({ username }) {
 
   return (
     <div className="bg-card p-4 md:p-6 rounded-xl shadow-sm">
-      <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-        {profile?.avatarConfig ? (
-          <BoringAvatar
-            size={96}
-            name={profile.avatarConfig.seed}
-            variant={profile.avatarConfig.variant}
-            colors={profile.avatarConfig.colors}
-          />
-        ) : (
-          <Avatar className="h-24 w-24">
-            <AvatarImage alt={profile.username || "User"} />
-            <AvatarFallback className="text-4xl">
-              {profile.username?.charAt(0) || "U"}
-            </AvatarFallback>
-          </Avatar>
-        )}
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start">
+        <div className="flex flex-col items-center gap-2">
+          {profile?.avatarConfig ? (
+            <BoringAvatar
+              size={96}
+              name={profile.avatarConfig.seed}
+              variant={profile.avatarConfig.variant}
+              colors={profile.avatarConfig.colors}
+            />
+          ) : (
+            <Avatar className="h-24 w-24">
+              <AvatarImage alt={profile.username || "User"} />
+              <AvatarFallback className="text-4xl">
+                {profile.username?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+          )}
+
+          <span className="text-sm text-muted-foreground font-mono">
+            @{profile.username}
+          </span>
+        </div>
 
         <div className="flex-1 text-center md:text-left">
-          <h1 className="text-2xl font-bold">{profile.username}</h1>
+          <h1 className="text-2xl font-bold">
+            {profile.name || profile.username}
+          </h1>
+
           <p className="text-muted-foreground mt-2 max-w-md">
             {profile.bio || "No bio yet"}
           </p>

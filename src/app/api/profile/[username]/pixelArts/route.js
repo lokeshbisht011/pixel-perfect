@@ -22,6 +22,19 @@ export async function GET(req, { params }) {
       visibilityStatus: true,
       contentRating: true,
       title: true,
+      remixCount: true,
+      originalArtId: true,
+      originalArt: {
+        select: {
+          title: true,
+          profile: {
+            select: {
+              username: true,
+              avatarConfig: true,
+            },
+          },
+        },
+      },
       profile: {
         select: {
           id: true,

@@ -161,9 +161,39 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
         </div>
 
         {/* Title */}
-        <h4 className="font-bold text-lg mb-2 font-mono truncate">
+        <h4 className="font-bold text-xl font-mono truncate">
           {pixelArt.title || "UNTITLED"}
         </h4>
+
+        {/* Original Art Attribution (if remix) */}
+        {pixelArt.originalArt ? (
+          <div
+            className="flex flex-wrap items-center gap-1 mb-4 text-xs font-mono text-muted-foreground"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span>Remix of</span>
+
+            {/* Original art link */}
+            <Link
+              href={`/pixelArt?id=${pixelArt.originalArt.id}`}
+              className="font-semibold hover:text-pixel-neon-purple transition-colors"
+            >
+              {pixelArt.originalArt.title || "Untitled"}
+            </Link>
+
+            <span>by</span>
+
+            {/* Original artist link */}
+            <Link
+              href={`/${pixelArt.originalArt.profile.username}`}
+              className="font-semibold hover:text-pixel-neon-cyan transition-colors"
+            >
+              @{pixelArt.originalArt.profile.username}
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-4"></div>
+        )}
 
         {/* Profile Section */}
         <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
@@ -199,38 +229,34 @@ const PixelArtCard = ({ pixelArt, currentUserProfile, onPixelArtDeleted }) => {
               <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
               <span>{likes}</span>
             </div>
+
             <div className="flex items-center gap-1 text-pixel-neon-cyan">
               <MessageSquare className="w-4 h-4" />
               <span>{pixelArt.commentsCount}</span>
             </div>
 
-            {/* Share */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsShareModalOpen(true);
-              }}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-
-            {/* Remix */}
             {pixelArt.canRemix && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-4 w-4"
-                disabled={isRemixing}
+              <div
                 onClick={handleRemixPixelArt}
+                className={`flex items-center gap-1 cursor-pointer hover:text-pixel-neon-purple transition-colors}`}
+                disabled={isRemixing}
               >
                 <Wand2
                   className={`h-4 w-4 ${isRemixing ? "animate-pulse" : ""}`}
                 />
-              </Button>
+                <span>{pixelArt.remixCount}</span>
+              </div>
             )}
+
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsShareModalOpen(true);
+              }}
+              className={`flex items-center gap-1 cursor-pointer hover:text-pixel-neon-blue transition-colors}`}
+            >
+              <Share2 className="w-4 h-4" />
+            </div>
           </div>
 
           {/* Action Buttons (Edit/Delete) - Only shown if it's the current user */}

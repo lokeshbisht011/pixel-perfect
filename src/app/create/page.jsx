@@ -189,7 +189,6 @@ const CreatePixelArt = () => {
       <motion.div variants={itemVariants} className="flex-grow">
         <PixelArtCanvas
           onSave={handleSavePixelArt}
-          userId={session?.user?.id ?? ""}
           prompt={prompt}
         />
       </motion.div>

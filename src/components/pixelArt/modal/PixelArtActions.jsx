@@ -17,7 +17,7 @@ export default function PixelArtActions({
   pixelArt,
   currentUserProfile,
   onDelete,
-  isOwner
+  isOwner,
 }) {
   const [liked, setLiked] = useState(
     pixelArt.likes.some((l) => l.profileId === currentUserProfile?.id)
@@ -67,7 +67,6 @@ export default function PixelArtActions({
         title: "Remix created!",
         description: "You can now edit and build on this artwork",
       });
-      
 
       router.push(`/edit?id=${result.pixelArt.id}`);
     } catch (error) {
@@ -125,29 +124,28 @@ export default function PixelArtActions({
             <span>{pixelArt.commentsCount}</span>
           </div>
 
-          {/* Share */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-4 w-4"
+          {pixelArt.canRemix && (
+            <div
+              onClick={handleRemixPixelArt}
+              className={`flex items-center gap-1 cursor-pointer hover:text-pixel-neon-purple transition-colors}`}
+              disabled={isRemixing}
+            >
+              <Wand2
+                className={`h-4 w-4 ${isRemixing ? "animate-pulse" : ""}`}
+              />
+              <span>{pixelArt.remixCount}</span>
+            </div>
+          )}
+
+          <div
             onClick={(e) => {
               e.stopPropagation();
               setIsShareModalOpen(true);
             }}
+            className={`flex items-center gap-1 cursor-pointer hover:text-pixel-neon-blue transition-colors}`}
           >
-            <Share2 className="h-4 w-4" />
-          </Button>
-
-          {/* Remix */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-4 w-4"
-            disabled={isRemixing}
-            onClick={handleRemixPixelArt}
-          >
-            <Wand2 className={`h-4 w-4 ${isRemixing ? "animate-pulse" : ""}`} />
-          </Button>
+            <Share2 className="w-4 h-4" />
+          </div>
         </div>
 
         {/* Action Buttons (Edit/Delete) - Only shown if it's the current user */}
@@ -169,7 +167,7 @@ export default function PixelArtActions({
               className="h-7 w-7 hover:text-red-500"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete()
+                onDelete();
               }}
             >
               <Trash2 className="h-4 w-4" />

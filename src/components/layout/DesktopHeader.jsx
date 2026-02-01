@@ -14,6 +14,9 @@ const DesktopHeader = ({
   setNotificationsOpen,
   markAllRead,
   signOut,
+  handleLoginClick,
+  handleSignupClick,
+  handleCloseModal,
 }) => {
   return (
     <nav className="hidden md:flex items-center justify-between max-w-7xl mx-auto">
@@ -37,51 +40,64 @@ const DesktopHeader = ({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setNotificationsOpen((p) => !p)}
-          >
-            <Bell className="h-5 w-5 text-pixel-neon-pink" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-            )}
-          </Button>
+      {/* Actions */}
+      <div className="flex items-center gap-3 font-mono">
+        {session ? (
+          <>
+            {/* Notifications (future) */}
+            <div className="relative hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setNotificationsOpen((p) => !p)}
+              >
+                <Bell className="h-5 w-5 text-pixel-neon-pink" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                )}
+              </Button>
 
-          {notificationsOpen && (
-            <NotificationDropdown
-              notifications={notifications}
-              onMarkAllRead={markAllRead}
-            />
-          )}
-        </div>
+              {notificationsOpen && (
+                <NotificationDropdown
+                  notifications={notifications}
+                  onMarkAllRead={markAllRead}
+                />
+              )}
+            </div>
 
-        <Link href={`/${profile?.username}`}>
-          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary">
-            {profile?.avatarConfig ? (
-              <BoringAvatar
-                size={40}
-                name={profile.avatarConfig.seed}
-                variant={profile.avatarConfig.variant}
-                colors={profile.avatarConfig.colors}
-              />
-            ) : (
-              <BoringAvatar
-                size={40}
-                name={""}
-                variant={"beam"}
-                colors={["#00E5FF"]}
-              />
-            )}
-          </div>
-        </Link>
+            {/* Avatar */}
+            <Link href={`/${profile?.username}`}>
+              <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary">
+                <BoringAvatar
+                  size={40}
+                  name={profile?.avatarConfig?.seed || ""}
+                  variant={profile?.avatarConfig?.variant || "beam"}
+                  colors={profile?.avatarConfig?.colors || ["#00E5FF"]}
+                />
+              </div>
+            </Link>
 
-        <Button variant="ghost" onClick={signOut}>
-          <LogOut className="w-4 h-4" />
-          Log out
-        </Button>
+            {/* Logout */}
+            <Button variant="ghost" onClick={signOut}>
+              <LogOut className="w-4 h-4 mr-1" />
+              Log out
+            </Button>
+          </>
+        ) : (
+          <>
+            {/* Login */}
+
+            <Button variant="ghost" onClick={handleLoginClick}>
+              Log in
+            </Button>
+
+            {/* Signup */}
+
+            <Button variant="neon" onClick={handleSignupClick}>
+              Sign up
+            </Button>
+          </>
+        )}
       </div>
     </nav>
   );

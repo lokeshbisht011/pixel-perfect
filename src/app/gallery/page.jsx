@@ -15,6 +15,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import PixelArtCard from "@/components/pixelArt/PixelArtCard";
+import { usePathname, useRouter } from "next/navigation";
 
 const fetchPixelArts = async ({ date, query }) => {
   try {
@@ -37,15 +38,23 @@ const formatDate = (daysAgo = 0) => {
   return d.toISOString().split("T")[0];
 };
 
-const PixelArtGallery = () => {
+const PixelArtGallery = ({searchParams}) => {
   const { data: session } = useSession();
 
   const [pixelArts, setPixelArts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(searchParams?.date ?? null);
   const [profile, setProfile] = useState(null);
+
+  const router = useRouter();
+const pathname = usePathname();
+
+
+  useEffect(() => {
+    setSelectedDate(searchParams?.date ?? null);
+  }, [searchParams?.date]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -93,7 +102,7 @@ const PixelArtGallery = () => {
   useEffect(() => {
     const initLoad = async () => {
       setLoading(true);
-      const data = await fetchPixelArts({}); // no date, no query → fetch all
+      const data = await fetchPixelArts({date: selectedDate}); // no date, no query → fetch all
       if (data.length > 0) {
         setPixelArts(data);
         daysLoaded.current += 1;
@@ -151,7 +160,7 @@ const PixelArtGallery = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto items-start sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto items-center sm:items-center">
           <form
             onSubmit={handleSearch}
             className="relative flex-1 w-full sm:w-auto"
@@ -195,6 +204,7 @@ const PixelArtGallery = () => {
                 setPixelArts([]);
                 setHasMore(true);
                 daysLoaded.current = 0;
+                router.push(pathname);
               }}
             >
               Clear

@@ -12,6 +12,9 @@ const calculateBadgeProgress = (badge, stats) => {
     streak: stats.currentStreak,
     pixel_arts_liked: stats.pixelArtsLikedCount,
     likes_received: stats.likesReceivedCount,
+    remixes_made: stats.remixesMadeCount,
+    remixes_received: stats.remixesReceivedCount,
+    daily_prompt_participation: stats.dailyPromptParticipationCount
   };
 
   const current = valueMap[badge.type] ?? 0;

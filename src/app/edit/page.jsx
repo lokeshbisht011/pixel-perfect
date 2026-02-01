@@ -19,7 +19,8 @@ const PixelArtEditor = () => {
   const [pixelArt, setPixelArt] = useState(null);
   const [pixelArtId, setPixelArtId] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [quote, setQuote] = useState(null); // New state for the random quote
+  const [quote, setQuote] = useState(null);
+  const [prompt, setPrompt] = useState(null);
 
   // Use a single useEffect for all data fetching and state initialization
   useEffect(() => {
@@ -43,6 +44,31 @@ const PixelArtEditor = () => {
       fetchPixelArt();
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const fetchPrompt = async () => {
+      try {
+        const today = new Date();
+        const localDate = today.toISOString().split("T")[0];
+        const res = await fetch(`/api/dailyPrompts/today`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!res.ok) {
+          return;
+        }
+        const data = await res.json();
+        setPrompt(data);
+      } catch (err) {
+        console.error("Error fetching prompt:", err);
+      } finally {
+      }
+    };
+
+    fetchPrompt();
+  }, []);
 
   const handleUpdatePixelArt = async ({
     title,
@@ -105,7 +131,7 @@ const PixelArtEditor = () => {
         <PixelArtCanvas
           onSave={handleUpdatePixelArt}
           pixelArt={pixelArt}
-          userId={session?.user?.id ?? ""}
+          prompt={prompt}
         />
       ) : (
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground">

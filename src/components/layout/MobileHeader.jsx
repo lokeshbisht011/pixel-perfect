@@ -33,12 +33,14 @@ const MobileHeader = ({
         <span className="font-mono font-bold text-lg">
           <span className="text-pixel-neon-cyan">Pixel</span>
           <span className="text-pixel-neon-pink">Art</span>
+          <span className="text-pixel-neon-green">Daily</span>
         </span>
       </Link>
 
       {/* Right */}
       <div className="flex items-center gap-2">
-        <div className="relative">
+        <div className="relative hidden">
+          {/* TODO implement notifications */}
           <Button
             variant="ghost"
             size="icon"

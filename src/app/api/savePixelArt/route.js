@@ -35,6 +35,7 @@ export async function POST(req) {
       lastActivity: profile.lastActivity,
       currentStreak: profile.currentStreak,
       maxStreakCount: profile.maxStreakCount,
+      isActive: true
     });
 
     const transactionOps = [
@@ -57,6 +58,9 @@ export async function POST(req) {
         data: {
           pixelArtsCount: { increment: 1 },
           ...streakUpdate,
+          ...(dailyPromptId
+            ? { dailypromptParticipation: { increment: 1 } }
+            : {}),
         },
       }),
     ];
