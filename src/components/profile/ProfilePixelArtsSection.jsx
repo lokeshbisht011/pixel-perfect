@@ -39,7 +39,7 @@ export default function ProfilePixelArtsSection({
     );
 
   return (
-    <div className="grid sm:grid-cols-3 md:grid-cols-4 gap-6 mt-4">
+    <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
       {pixelArts.map((art) => (
         <PixelArtCard
           key={art.id}
