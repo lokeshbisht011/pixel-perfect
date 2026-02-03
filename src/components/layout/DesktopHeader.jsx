@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import NotificationDropdown from "../notifications/NotificationDropdown";
 import BoringAvatar from "boring-avatars";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 const DesktopHeader = ({
   profile,
@@ -21,9 +22,17 @@ const DesktopHeader = ({
   return (
     <nav className="hidden md:flex items-center justify-between max-w-7xl mx-auto">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3">
-        <Gamepad2 className="w-8 h-8 text-pixel-neon-pink" />
-        <h1 className="text-2xl font-bold font-mono">
+      <Link href="/" className="flex items-center gap-2">
+        <Image
+          src="/logo.png"
+          alt="Pixel Art Daily Logo"
+          width={34}
+          height={34}
+          className="pixelated"
+          priority
+        />
+
+        <h1 className="text-xl font-bold font-mono">
           <span className="text-pixel-neon-cyan">Pixel</span>
           <span className="text-pixel-neon-pink">Art</span>
           <span className="text-pixel-neon-green">Daily</span>

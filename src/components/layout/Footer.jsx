@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Gamepad2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
+import Image from "next/image";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -84,10 +85,15 @@ const Footer = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <div className="w-12 h-12 bg-gradient-main rounded-sm flex items-center justify-center">
-                <Gamepad2 className="w-8 h-8 text-pixel-neon-pink" />
-              </div>
-              <h3 className="text-2xl font-bold font-mono">
+              <Image
+                src="/logo.png"
+                alt="Pixel Art Daily Logo"
+                width={34}
+                height={34}
+                className="pixelated"
+                priority
+              />
+              <h3 className="text-xl md:text-2xl font-bold font-mono">
                 <span className="text-pixel-neon-cyan">Pixel</span>
                 <span className="text-pixel-neon-pink">Art</span>
                 <span className="text-pixel-neon-green">Daily</span>

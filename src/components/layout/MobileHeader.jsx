@@ -5,6 +5,7 @@ import NotificationDropdown from "../notifications/NotificationDropdown";
 import { PixelMenuIcon } from "./PixelMenuIcon";
 import BoringAvatar from "boring-avatars";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 const MobileHeader = ({
   profile,
@@ -29,7 +30,14 @@ const MobileHeader = ({
 
       {/* Center */}
       <Link href="/" className="flex items-center gap-2">
-        <Gamepad2 className="w-6 h-6 text-pixel-neon-pink" />
+        <Image
+          src="/logo.png"
+          alt="Pixel Art Daily Logo"
+          width={32}
+          height={32}
+          className="pixelated"
+          priority
+        />
         <span className="font-mono font-bold text-lg">
           <span className="text-pixel-neon-cyan">Pixel</span>
           <span className="text-pixel-neon-pink">Art</span>
